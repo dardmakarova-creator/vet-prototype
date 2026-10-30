@@ -1,0 +1,1374 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>html{color-scheme:light}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Прототип вет-приложения</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: phone mockup (light wireframe, fixed palette) beside a scenario panel; stacks on phones. */
+:root{
+  --page:#E9ECEF; --page-fg:#16191D; --page-mut:#545B63; --panel:#F7F8F9; --line:#CDD2D8; --bezel:#111316;
+  --focus:#2F6BDF; --live:#E0483D; --scrim:rgba(20,18,24,.55);
+  --f-ui:"Golos Text", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --s:1;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--page:#101215;--page-fg:#E6E9EC;--page-mut:#A2A9B1;--panel:#181B1F;--line:#2C3137;--bezel:#000000;color-scheme:dark}}
+:root[data-theme="dark"]{--page:#101215;--page-fg:#E6E9EC;--page-mut:#A2A9B1;--panel:#181B1F;--line:#2C3137;--bezel:#000000;color-scheme:dark}
+
+body{background:var(--page);color:var(--page-fg);font-family:var(--f-ui);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px}
+.wrap{max-width:1040px;margin:0 auto;display:flex;flex-wrap:wrap;gap:48px;align-items:flex-start;justify-content:center}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+button{font:inherit;color:inherit}
+
+/* ---------- app themes (from the light / dark samples) ---------- */
+.phone[data-th="light"]{
+  --ph-bg:#DFD0BB; --surf:#F5EDE1; --sheet:#F5EDE1; --sheet-surf:#FFFAF2;
+  --g-ink:#45444B; --g-ink2:#54525A; --g-ink3:#5F5B58; --g-hair:rgba(69,68,75,.18); --g-line:rgba(69,68,75,.35);
+  --s-ink:#3E3D44; --s-ink2:#4F4D55; --s-ink3:#625E5B; --s-hair:#DCCDB8;
+  --ink:#3E3D44; --ink-2:#4F4D55; --ink-3:#625E5B; --ink-on:#4F4D55; --hair:#DCCDB8; --bd:#C4B196;
+  --fill:#EADFCF; --fill-2:#D6C6AE; --acc-pale:#E8D8BF;
+  --acc:#8B6D4F; --acc-h:#7C6146; --acc-d:#8B6D4F; --on-acc:#FFF8EE; --acc-ring:rgba(139,109,79,.28);
+  --red:#A82828; --rec:#A82828; --on-red:#FFFFFF; --red-40:rgba(168,40,40,.4);
+  --dk:#45444B; --on-dk:#F5EDE1; --hl:#F6E3C3; --hl-a:rgba(139,109,79,.22);
+  --warn:#F2BE93; --warn-bg:#FBEBDD; --warn-line:#CF8448; --ok:#DCE8D2;
+}
+.phone[data-th="dark"]{
+  --ph-bg:#56555B; --surf:#64636A; --sheet:#4A494F; --sheet-surf:#5C5B61;
+  --g-ink:#D6BE99; --g-ink2:#D9C6A8; --g-ink3:#CDBFAA; --g-hair:rgba(214,190,153,.2); --g-line:rgba(214,190,153,.45);
+  --s-ink:#F1E9DC; --s-ink2:#E6DCCC; --s-ink3:#D2C7B7; --s-hair:#76757C;
+  --ink:#F1E9DC; --ink-2:#E6DCCC; --ink-3:#D2C7B7; --ink-on:#E6DCCC; --hair:#76757C; --bd:#7E7D84;
+  --fill:#5E5D63; --fill-2:#75747B; --acc-pale:#6E6D75;
+  --acc:#6B8FB0; --acc-h:#7B9DBC; --acc-d:#8FB0CF; --on-acc:#14171C; --acc-ring:rgba(107,143,176,.35);
+  --red:#A82828; --rec:#E07A72; --on-red:#FFFFFF; --red-40:rgba(168,40,40,.4);
+  --dk:#2C2B30; --on-dk:#F1E9DC; --hl:#7A6E5E; --hl-a:rgba(214,190,153,.22);
+  --warn:#E5A47A; --warn-bg:#6E5446; --warn-line:#E5A47A; --ok:#4F6650;
+}
+
+/* ---------- Jak's eye yellow: one vivid accent for "where you are / what's done / what's live" ---------- */
+.phone{--hi:#F2C318;--on-hi:#1F1E23;--hi-soft:rgba(242,195,24,.24);--hi-ring:rgba(242,195,24,.35)}
+.tab.on{color:var(--s-ink)}
+.tab svg{padding:4px 16px;border-radius:14px;box-sizing:content-box;transition:background-color .25s,color .25s}
+.tab.on svg{background:var(--hi);color:var(--on-hi)}
+.tabind{display:none}
+.stepper li.done .sn,.steps li.done .ck{background:var(--hi)!important;border-color:var(--hi)!important;color:var(--on-hi)!important}
+.stepper li.done:not(:last-child)::after{background:var(--hi)!important}
+.stepper li.now .sn{border-color:var(--hi)!important;box-shadow:0 0 0 4px var(--hi-ring)!important}
+.wave i,.prog{background:var(--hi)!important}
+.bigbtn.live::before,.bigbtn.live::after{border-color:var(--hi)!important}
+.meter i{background:var(--hi)!important}
+.chip.on,.k.eq,.seg .ind{background:var(--hi)!important;border-color:var(--hi)!important;color:var(--on-hi)!important}
+.seg button.on{color:var(--on-hi)!important}
+.cfm .cbtn{background:var(--hi)!important;color:var(--on-hi)!important;box-shadow:0 6px 16px -8px rgba(242,195,24,.8)}
+.tile.pri .ring{background:var(--hi);border-color:var(--hi)!important;color:var(--on-hi)}
+.toast svg{color:var(--hi)!important}
+.psug mark{background:var(--hi)!important;color:var(--on-hi)}
+.star.on{color:#D9A800}.star.on svg{fill:var(--hi)}
+.hlw{background:var(--hi);color:var(--on-hi);border-radius:10px;padding:0 10px;display:inline-block;transform:rotate(-2deg)}
+.tag.dark{background:var(--hi)!important;color:var(--on-hi)!important}
+.spin{border-top-color:var(--hi)!important}
+.ib.mic:focus-visible,.cbtn:focus-visible{outline-color:var(--hi)}
+
+/* Жак turns to the user and back on the welcome screen: profile → face → profile, looped */
+.jturn .jt-head{transform-box:view-box;transform-origin:62px 60px;animation:jtTilt 4.4s cubic-bezier(.4,0,.2,1) .4s infinite}
+.jturn .jt-prof{transform-box:view-box;transform-origin:62px 54px;animation:jtProf 4.4s ease-in-out .4s infinite}
+.jturn .jt-front{transform-box:view-box;transform-origin:62px 54px;opacity:0;animation:jtFront 4.4s ease-in-out .4s infinite}
+.jturn .jt-eyes{transform-box:view-box;transform-origin:62px 50px;animation:jtBlink 4.4s ease-in-out .4s infinite}
+@keyframes jtProf{0%,22%{opacity:1;transform:none}32%,78%{opacity:0;transform:translateX(9px) scaleX(.7)}88%,100%{opacity:1;transform:none}}
+@keyframes jtFront{0%,24%{opacity:0;transform:translateX(-9px) scaleX(.7)}34%,76%{opacity:1;transform:none}86%,100%{opacity:0;transform:translateX(-9px) scaleX(.7)}}
+@keyframes jtTilt{0%,24%{transform:none}38%{transform:rotate(-12deg)}46%,74%{transform:rotate(-7deg)}86%,100%{transform:none}}
+@keyframes jtBlink{0%,56%,62%,100%{transform:none}59%{transform:scaleY(.1)}}
+@media (prefers-reduced-motion: reduce){.jturn .jt-prof{animation:none;opacity:0}.jturn .jt-front{animation:none;opacity:1}.jturn .jt-head,.jturn .jt-eyes{animation:none}.jturn .jt-head{transform:rotate(-7deg)}}
+
+/* ---------- side panel ---------- */
+.side{flex:1 1 300px;max-width:400px;min-width:0;display:flex;flex-direction:column;gap:24px;padding-top:12px}
+.side h1{margin:0;font-size:30px;line-height:1.15;font-weight:700;letter-spacing:-.01em;text-wrap:balance}
+.side p{margin:0;color:var(--page-mut);font-size:15px;line-height:1.55}
+.grp{display:flex;flex-direction:column;gap:8px}
+.grp h2{margin:0;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--page-mut)}
+.sbtn{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:46px;padding:0 14px;border-radius:12px;border:1px solid var(--line);background:var(--panel);color:var(--page-fg);font-size:15px;cursor:pointer;text-align:left;transition:border-color .15s,background .15s,color .15s}
+.sbtn:hover{border-color:var(--page-fg)}
+.sbtn[aria-pressed="true"]{background:var(--page-fg);color:var(--page);border-color:var(--page-fg)}
+.sbtn small{font-size:12px;color:inherit;opacity:.7}
+.jumps{display:flex;flex-wrap:wrap;gap:8px}
+.jbtn{min-height:38px;padding:0 13px;border-radius:19px;border:1px solid var(--line);background:var(--panel);color:var(--page-fg);font-size:14px;cursor:pointer}
+.jbtn:hover{border-color:var(--page-fg)}
+
+/* ---------- phone ---------- */
+.phonebox{width:calc(412px * var(--s));height:calc(866px * var(--s));flex:none}
+.phone{box-sizing:content-box;width:390px;height:844px;border:11px solid var(--bezel);border-radius:56px;background:var(--ph-bg);overflow:hidden;position:relative;transform:scale(var(--s));transform-origin:top left;box-shadow:0 40px 70px -30px rgba(0,0,0,.45);color:var(--ink);font-size:15px}
+.phone::before{content:"";position:absolute;top:11px;left:50%;width:112px;height:30px;margin-left:-56px;border-radius:16px;background:var(--bezel);z-index:60}
+.app{position:absolute;inset:0;display:flex;flex-direction:column;border-radius:45px;overflow:hidden}
+.stage{flex:1;position:relative;overflow:hidden;min-height:0}
+.layer{position:absolute;inset:0;display:flex;flex-direction:column;background:var(--ph-bg)}
+.ovr{position:absolute;inset:0;pointer-events:none;z-index:40}
+.ovr > *{pointer-events:auto}
+
+.hd{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;padding:52px 20px 10px}
+.hd-l{display:flex;flex-direction:column;gap:2px;min-width:0}
+.bk{display:inline-flex;align-items:center;gap:2px;font-size:15px;color:var(--ink-2);background:none;border:0;padding:0;min-height:32px;cursor:pointer;align-self:flex-start}
+.h1{margin:0;font-size:28px;line-height:1.2;font-weight:700;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.me{width:44px;height:44px;flex:none;border-radius:50%;border:1.5px solid var(--ink);background:var(--ph-bg);color:var(--ink);display:grid;place-items:center;cursor:pointer;transition:transform .15s}
+.me:active{transform:scale(.93)}
+.me.on{background:var(--ink);color:var(--ph-bg);cursor:default}
+.bd{flex:1;min-height:0;overflow-y:auto;padding:8px 20px 20px;display:flex;flex-direction:column;gap:14px;scrollbar-width:none}
+.bd::-webkit-scrollbar{display:none}
+.bd.center{align-items:center;justify-content:center;text-align:center;gap:14px}
+
+.s{font-size:13px;color:var(--ink-3);line-height:1.4}
+.c{text-align:center}
+.lbl{font-size:12px;color:var(--ink-3);font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+.lblrow{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.sect{display:flex;flex-direction:column;gap:8px}
+.col{display:flex;flex-direction:column;gap:14px}
+.tx{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0;text-align:left}
+.lnk{background:none;border:0;padding:0 2px;min-height:40px;font-size:14px;font-weight:600;text-decoration:underline;text-underline-offset:3px;cursor:pointer;color:var(--ink)}
+.tag{display:inline-flex;align-items:center;padding:4px 10px;border-radius:12px;background:var(--fill-2);font-size:12px;font-weight:600;color:var(--ink)}
+.tag.dark{background:var(--ink);color:var(--ph-bg)}
+.tag.dash{background:none;border:1.5px dashed var(--ink)}
+.meta{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+
+.tile{display:flex;align-items:center;gap:16px;min-height:88px;padding:16px 20px;border-radius:20px;border:1.5px solid var(--ink);background:var(--ph-bg);cursor:pointer;transition:transform .15s}
+.tile:active{transform:scale(.98)}
+.tile.pri{background:var(--ink);color:var(--ph-bg);min-height:118px}
+.tile .t{font-size:18px;font-weight:700}
+.tile .t.big{font-size:21px}
+.tile.pri .s{color:var(--ink-on)}
+.ring{width:56px;height:56px;border-radius:50%;border:1.5px solid currentColor;display:grid;place-items:center;flex:none}
+.draftrow{display:flex;align-items:center;gap:12px;min-height:64px;padding:0 16px;border-radius:16px;border:1.5px dashed var(--ink);background:var(--ph-bg);cursor:pointer}
+.draftrow b{font-size:16px;font-weight:600}
+.draftrow .lnkt{font-size:14px;font-weight:600;text-decoration:underline;text-underline-offset:3px}
+
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;min-height:52px;padding:0 16px;border-radius:14px;border:1.5px solid var(--ink);background:var(--ph-bg);color:var(--ink);font-size:16px;font-weight:600;cursor:pointer;transition:transform .12s}
+.btn:active{transform:scale(.97)}
+.btn.pri{background:var(--ink);color:var(--ph-bg)}
+.btn.dash{border-style:dashed}
+.btn.ghost{border-color:transparent;color:var(--ink-2);min-height:44px}
+.btn.sm{min-height:50px;font-size:15px}
+.btn.auto{align-self:center;padding:0 24px}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.grid3 .btn{padding:0 6px;font-size:14px;gap:4px;min-height:48px}
+
+.tplbtn{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:60px;padding:0 16px;border-radius:14px;border:1.5px solid var(--ink);background:var(--ph-bg);cursor:pointer;flex:none}
+.tplbtn b{font-size:17px;font-weight:700}
+.tplbtn .ch{display:flex;align-items:center;gap:4px;font-size:14px;color:var(--ink-2)}
+
+.list{display:flex;flex-direction:column}
+.row{display:flex;align-items:center;gap:12px;min-height:64px;margin:0 -8px;padding:0 8px;border:0;border-bottom:1px solid var(--hair);background:none;text-align:left;cursor:pointer;border-radius:0}
+.row.static{cursor:default}
+.row.tight{min-height:56px}
+.row b{font-size:16px;font-weight:600}
+.row .end{font-size:14px;font-weight:600}
+.row.fresh{animation:fresh 2.6s ease-out}
+@keyframes fresh{0%,45%{background:var(--fill-2)}100%{background:transparent}}
+.av{width:44px;height:44px;border-radius:50%;background:var(--fill-2);display:grid;place-items:center;font-weight:700;color:var(--ink-2);flex:none}
+.num{font-variant-numeric:tabular-nums}
+
+.field{display:flex;align-items:center;gap:8px;min-height:46px;padding:0 14px;border-radius:14px;border:1.5px solid var(--hair);color:var(--ink-3);flex:none}
+.field:focus-within{border-color:var(--ink)}
+.field input{border:0;outline:0;flex:1;min-width:0;font:inherit;font-size:15px;color:var(--ink);background:transparent}
+.inp{width:100%;box-sizing:border-box;min-height:48px;padding:0 14px;border-radius:14px;border:1.5px solid var(--hair);font:inherit;font-size:15px;color:var(--ink);background:var(--ph-bg)}
+.inp:focus{border-color:var(--ink);outline:0}
+textarea.inp{padding:12px 14px;min-height:110px;resize:none;line-height:1.45}
+.fl{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:var(--ink-2)}
+.fl.grow{flex:1;min-height:150px}
+.fl.grow textarea{flex:1}
+.err{font-size:14px;color:var(--rec);font-weight:600}
+
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;min-height:38px;padding:0 14px;border-radius:19px;border:1.5px solid var(--ink);background:var(--ph-bg);font-size:14px;cursor:pointer;transition:background .2s,color .2s}
+.chip.on{background:var(--ink);color:var(--ph-bg)}
+
+.seg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));padding:4px;border-radius:16px;border:1.5px solid var(--ink);position:relative;flex:none}
+.seg button{position:relative;z-index:1;min-height:44px;border:0;background:none;font-weight:600;font-size:14px;cursor:pointer;transition:color .25s;border-radius:12px}
+.seg button.on{color:var(--ph-bg)}
+.seg .ind{position:absolute;top:4px;bottom:4px;left:4px;width:calc(50% - 4px);border-radius:12px;background:var(--ink);transition:transform .32s cubic-bezier(.22,.8,.24,1)}
+.seg.r .ind{transform:translateX(100%)}
+.secrow{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:48px;padding:0 6px 0 14px;border-radius:12px;background:var(--fill);font-size:15px}
+/* 4-step flow */
+.stepper{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;flex:none;position:relative}
+.stepper li{display:flex;flex-direction:column;align-items:center;gap:5px;position:relative;font-size:11px;color:var(--ink-3);text-align:center}
+.stepper li:not(:last-child)::after{content:"";position:absolute;top:13px;left:calc(50% + 17px);right:calc(-50% + 17px);height:1.5px;background:var(--hair)}
+.stepper li.done:not(:last-child)::after{background:var(--ink)}
+.stepper .sn{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--hair);display:grid;place-items:center;font-size:12px;font-weight:700;background:var(--ph-bg);color:var(--ink-3);transition:background .3s,border-color .3s,color .3s}
+.stepper li.done .sn{background:var(--ink);border-color:var(--ink);color:var(--ph-bg)}
+.stepper li.now .sn{border-color:var(--ink);color:var(--ink);box-shadow:0 0 0 3px var(--fill-2)}
+.stepper li.now,.stepper li.done{color:var(--ink)}
+.stepper li.now .sl{font-weight:700}
+.hint{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-radius:14px;background:var(--warn-bg);font-size:14px;line-height:1.4;flex:none;transition:background .3s}
+.hint svg{flex:none;margin-top:1px}
+.hint.ok{background:var(--ok)}
+.tag.warn{background:var(--warn);color:var(--ink);margin-left:8px}
+.rlab{display:flex;align-items:center}
+.rflag .inp{border-color:var(--warn-line);background:var(--warn-bg)}
+.rsec{border-radius:14px;padding:4px;margin:-4px}
+.rta{min-height:84px}
+.rnote{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:-2px}
+.upl{display:flex;align-items:center;gap:14px;min-height:72px;padding:12px 16px;border-radius:16px;border:1.5px dashed var(--ink);background:var(--fill);cursor:pointer;transition:background .2s}
+.upl:hover{background:var(--fill-2)}
+.upl b{font-size:16px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.spin.sm{width:26px;height:26px;border-width:3px;flex:none}
+.ib{width:40px;height:40px;border:0;background:none;display:grid;place-items:center;cursor:pointer;color:var(--ink-2);border-radius:10px}
+
+/* recording */
+.recz{flex:1 0 auto;min-height:290px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px}
+.bigbtn{width:132px;height:132px;border-radius:50%;background:var(--ink);color:var(--ph-bg);border:0;display:grid;place-items:center;cursor:pointer;position:relative;transition:transform .15s;flex:none}
+.bigbtn:active{transform:scale(.95)}
+.bigbtn.mid{width:88px;height:88px}
+.bigbtn.stop{background:var(--ph-bg);border:3px solid var(--ink)}
+.bigbtn.stop i{width:44px;height:44px;border-radius:9px;background:var(--ink)}
+.bigbtn.live::before,.bigbtn.live::after{content:"";position:absolute;inset:-3px;border-radius:50%;border:2px solid var(--ink);animation:ring 1.8s ease-out infinite;pointer-events:none}
+.bigbtn.live::after{animation-delay:.9s}
+@keyframes ring{from{transform:scale(1);opacity:.55}to{transform:scale(1.5);opacity:0}}
+.rl{font-size:17px;font-weight:600}
+.pill{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border-radius:20px;border:1.5px solid var(--ink);font-size:16px;font-weight:700;font-variant-numeric:tabular-nums}
+.pill.dark{background:var(--ink);color:var(--ph-bg)}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--rec);animation:blink 1.1s ease-in-out infinite}
+.sq{width:10px;height:10px;border-radius:2px;background:var(--ph-bg)}
+@keyframes blink{50%{opacity:.25}}
+.wave{display:flex;align-items:center;gap:5px;height:58px}
+.wave i{width:5px;border-radius:3px;background:var(--ink);height:10px;animation:wv .9s ease-in-out infinite}
+@keyframes wv{0%,100%{height:8px}50%{height:var(--h)}}
+.recrow{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:14px;border:1.5px solid var(--hair);align-self:stretch;position:relative;overflow:hidden;flex:none}
+.recrow b{font-size:16px;font-weight:600}
+.playbtn{width:44px;height:44px;border-radius:50%;border:1.5px solid var(--ink);background:var(--ph-bg);display:grid;place-items:center;cursor:pointer;flex:none}
+.prog{position:absolute;left:0;bottom:0;height:3px;width:0;background:var(--ink)}
+.recrow.playing .prog{animation:prog 3s linear forwards}
+@keyframes prog{to{width:100%}}
+.lnkbtn{display:inline-flex;align-items:center;gap:8px;min-height:44px;border:0;background:none;font-size:15px;font-weight:600;cursor:pointer}
+
+/* photos */
+.thumbs{display:flex;flex-wrap:wrap;gap:10px}
+.th{width:66px;height:66px;border-radius:12px;background:linear-gradient(135deg,var(--fill-2),var(--fill));display:grid;place-items:center;color:var(--ink-3)}
+.addth{width:66px;height:66px;border-radius:12px;border:1.5px dashed var(--ink);background:var(--ph-bg);display:grid;place-items:center;cursor:pointer}
+.tgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.tgrid .th{width:auto;height:auto;aspect-ratio:1;max-width:100%}
+.drop{flex:1;min-height:300px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;border-radius:20px;border:2px dashed var(--ink);background:var(--ph-bg);cursor:pointer;transition:background .2s}
+.drop:active{background:var(--fill)}
+.drop b{font-size:20px}
+.plusc{width:88px;height:88px;border-radius:50%;background:var(--ink);color:var(--ph-bg);display:grid;place-items:center}
+.banner{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:14px;background:var(--fill);font-size:15px;font-weight:600;flex:none}
+.banner .th{width:44px;height:44px;border-radius:9px}
+
+/* calc */
+.disp{min-height:100px;border-radius:18px;border:1.5px solid var(--hair);padding:10px 16px;display:flex;flex-direction:column;align-items:flex-end;justify-content:flex-end;gap:2px;flex:none;overflow:hidden}
+.disp .expr{font-size:15px;color:var(--ink-3);min-height:20px;font-variant-numeric:tabular-nums}
+.disp output{font-size:46px;font-weight:300;line-height:1.1;font-variant-numeric:tabular-nums;white-space:nowrap}
+.disp output.small{font-size:32px}
+.keys{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;flex:none}
+.k{min-height:60px;border-radius:18px;border:1.5px solid var(--ink);background:var(--ph-bg);font-size:23px;cursor:pointer;transition:transform .08s,background .15s,color .15s}
+.k:active{transform:scale(.93)}
+.k.fn{background:var(--fill)}
+.k.op{background:var(--fill-2)}
+.k.op.act,.k.eq{background:var(--ink);color:var(--ph-bg)}
+.k.z{grid-column:span 2}
+.dose{margin-top:auto;flex:none}
+
+/* dosage */
+.voice{display:flex;flex-direction:column;align-items:center;gap:10px;padding:18px 16px;border-radius:20px;border:1.5px solid var(--ink);flex:none}
+.voice b{font-size:16px;font-weight:600}
+.or{display:flex;align-items:center;gap:10px;color:var(--ink-3);font-size:13px}
+.or i{flex:1;height:1px;background:var(--hair)}
+.res{display:flex;flex-direction:column;gap:4px;padding:14px 16px;border-radius:14px;background:var(--fill)}
+.res b{font-size:18px}
+
+/* profile */
+.who{display:flex;align-items:center;gap:14px}
+.who .av{width:60px;height:60px;font-size:22px}
+.who b{font-size:20px}
+.arow{display:flex;align-items:center;gap:12px;min-height:58px;border-bottom:1px solid var(--hair)}
+.arow b{font-size:16px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.subbox{display:flex;flex-direction:column;gap:12px;padding:16px;border-radius:16px;border:1.5px solid var(--ink)}
+.subbox .top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.subbox .top b{font-size:17px}
+.suprow{display:flex;align-items:center;gap:12px;min-height:54px;padding:0 16px;border-radius:14px;border:1.5px solid var(--hair);background:var(--ph-bg);font-size:16px;font-weight:600;cursor:pointer;text-align:left}
+.out{margin-top:auto}
+.opt{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:58px;padding:0 16px;border-radius:14px;border:1.5px solid var(--hair);background:var(--ph-bg);cursor:pointer;font-size:16px;font-weight:600}
+.opt.on{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.opt .rad{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--ink);display:grid;place-items:center}
+.opt.on .rad::after{content:"";width:12px;height:12px;border-radius:50%;background:var(--ink)}
+
+/* full-screen states */
+.eart{width:100px;height:100px;border-radius:50%;background:var(--fill-2);display:grid;place-items:center;color:var(--ink-2);flex:none}
+.et{font-size:21px;font-weight:700}
+.big{font-size:27px;font-weight:700;letter-spacing:-.01em}
+.saved{display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:14px;border:1.5px dashed var(--ink);font-size:15px;font-weight:600;text-align:left}
+.full{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:40px 32px;text-align:center}
+.full .acts{display:flex;flex-direction:column;gap:10px;align-self:stretch;margin-top:12px}
+.spin{width:84px;height:84px;border-radius:50%;border:5px solid var(--fill-2);border-top-color:var(--ink);animation:rot .9s linear infinite}
+@keyframes rot{to{transform:rotate(360deg)}}
+.steps{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-direction:column;gap:12px;align-self:stretch;max-width:260px;margin-inline:auto}
+.steps li{display:flex;align-items:center;gap:12px;font-size:15px;color:var(--ink-3);transition:color .3s}
+.steps .ck{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--hair);display:grid;place-items:center;color:transparent;transition:background .3s,border-color .3s,color .3s;flex:none}
+.steps li.done{color:var(--ink);font-weight:600}
+.steps li.done .ck{background:var(--ink);border-color:var(--ink);color:var(--ph-bg)}
+.loginform{display:flex;flex-direction:column;gap:12px;align-self:stretch;text-align:left;margin-top:8px}
+
+/* tab bar */
+.tabbar{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:1.5px solid var(--ink);padding:6px 4px 24px;background:var(--ph-bg);position:relative;z-index:5;flex:none}
+.tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:52px;border:0;background:none;font-size:11px;color:var(--ink-3);cursor:pointer}
+.tab.on{color:var(--ink);font-weight:700}
+.tabind{position:absolute;top:-1.5px;left:4px;width:calc((100% - 8px) / 4);height:4px;display:flex;justify-content:center;transition:transform .35s cubic-bezier(.22,.8,.24,1),opacity .2s;pointer-events:none}
+.tabind span{width:34px;height:4px;border-radius:0 0 4px 4px;background:var(--ink)}
+
+/* overlays */
+.ov{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end}
+.ov.center{justify-content:center;padding:24px}
+.scrim{position:absolute;inset:0;background:var(--scrim)}
+.sheet{position:relative;background:var(--ph-bg);border-radius:26px 26px 0 0;padding:10px 20px 34px;display:flex;flex-direction:column;gap:12px;max-height:86%;overflow-y:auto}
+.grab{align-self:center;width:40px;height:5px;border-radius:3px;background:var(--hair);flex:none}
+.sheet h2,.dlg h2{margin:0;font-size:20px;font-weight:700}
+.shead{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.dlg{position:relative;background:var(--ph-bg);border-radius:24px;padding:20px;display:flex;flex-direction:column;gap:12px}
+.pv{aspect-ratio:4/3;max-width:100%;border-radius:14px;background:repeating-linear-gradient(135deg,var(--fill) 0 14px,var(--fill-2) 14px 28px);display:grid;place-items:center;color:var(--ink-3)}
+.toast{position:absolute;left:20px;right:20px;bottom:100px;z-index:50;background:var(--ink);color:var(--ph-bg);border-radius:14px;padding:14px 16px;font-size:15px;font-weight:600;display:flex;gap:10px;align-items:center;pointer-events:none}
+.flash{position:absolute;inset:0;background:#fff;z-index:55;pointer-events:none}
+
+/* ---------- grey-yellow skin (overrides the wireframe base) ---------- */
+.tile,.btn,.tplbtn,.chip,.k,.voice,.subbox,.playbtn,.me,.pill,.seg{border-color:var(--bd)}
+.tile,.btn,.tplbtn,.chip,.k,.inp,.playbtn,.me,.addth,.drop,.draftrow,.suprow,.opt,.voice,.subbox,.recrow,.field,.seg{background:var(--surf)}
+.btn.ghost{background:transparent;border-color:transparent}
+.tile.pri,.btn.pri{background:var(--acc);border-color:var(--acc);color:var(--on-acc)}
+.btn.pri:hover,.tile.pri:hover{background:var(--acc-h)}
+.tile.pri .s{color:var(--ink-2)}
+.bigbtn{background:var(--red);color:var(--on-red)}
+.bigbtn.stop{background:var(--surf);border-color:var(--ink)}
+.bigbtn.live::before,.bigbtn.live::after{border-color:var(--acc-d)}
+.me.on{background:var(--acc);border-color:var(--acc);color:var(--on-acc)}
+.tag.dark{background:var(--acc-pale);color:var(--ink)}
+.draftrow,.upl,.addth,.drop,.saved,.tag.dash{border-color:var(--acc-d)}
+.upl{background:var(--acc-pale)}
+.chip.on,.k.eq{background:var(--acc);border-color:var(--acc);color:var(--on-acc)}
+.k.op.act{background:var(--dk);border-color:var(--dk);color:var(--on-dk)}
+.k.fn{background:var(--fill)}
+.k.op{background:var(--acc-pale)}
+.seg .ind{background:var(--acc)}
+.seg button.on{color:var(--ink)}
+.stepper li.done .sn,.steps li.done .ck{background:var(--acc);border-color:var(--acc);color:var(--on-acc)}
+.stepper li.done:not(:last-child)::after{background:var(--acc-d)}
+.stepper li.now .sn{border-color:var(--acc-d);box-shadow:0 0 0 3px var(--acc-pale)}
+.pill.dark,.toast{background:var(--ink);color:var(--surf)}
+.sq{background:var(--surf)}
+.wave i,.prog{background:var(--acc-d)}
+.plusc{background:var(--acc);color:var(--on-acc)}
+.opt.on{border-color:var(--acc-d);box-shadow:inset 0 0 0 1px var(--acc-d)}
+.opt .rad{border-color:var(--acc-d)}
+.opt.on .rad::after{background:var(--acc-d)}
+.spin{border-top-color:var(--acc-d)}
+.tabbar{border-top:1px solid var(--hair);background:var(--surf)}
+.tabind span{background:var(--acc-d)}
+.av{background:var(--acc-pale)}
+
+/* ---------- drafts, trash, background recording, card actions ---------- */
+.drow{display:flex;align-items:center;gap:6px}
+.drow .draftrow{flex:1;min-width:0;text-align:left}
+.ib.del{color:var(--ink-2)}
+.btn.danger{background:var(--rec);border-color:var(--rec);color:#fff}
+.lnk.danger{color:var(--rec)}
+.tag.net{background:var(--fill-2);margin-left:0}
+.tag.okv{background:var(--ok)}
+.recbar{display:flex;align-items:center;gap:10px;margin:0 10px 8px;padding:6px 6px 6px 12px;border-radius:18px;background:var(--ink);color:var(--surf);flex:none;position:relative;z-index:6}
+.recbar .go{flex:1;min-width:0;display:flex;align-items:center;gap:10px;background:none;border:0;color:inherit;font:inherit;font-size:14px;font-weight:600;text-align:left;min-height:44px;cursor:pointer}
+.recbar .rb{width:40px;height:40px;border-radius:50%;border:0;display:grid;place-items:center;cursor:pointer;flex:none}
+.recbar .rb.p{background:#4B4F55;color:#fff}.recbar .rb.s{background:var(--red);color:var(--on-red)}
+.recbar .dot.off{animation:none;background:#9A9DA2}
+.recbtns{display:grid;grid-template-columns:64px 132px 64px;align-items:center;justify-items:center;gap:18px}
+.sidebtn{width:56px;height:56px;border-radius:50%;border:1.5px solid var(--bd);background:var(--surf);color:var(--ink);display:grid;place-items:center;cursor:pointer}
+.sidebtn .sqi{width:18px;height:18px;border-radius:4px;background:var(--ink)}
+.wave.paused i{animation-play-state:paused;opacity:.35}
+.csec{display:flex;flex-direction:column;gap:4px;padding:12px 14px;border-radius:14px;background:var(--surf);border:1px solid var(--hair)}
+.csec p{margin:0;font-size:15px;line-height:1.45}
+.csec.hl{animation:fresh 2.6s ease-out}
+.xopt{justify-content:flex-start;gap:14px;min-height:66px;text-align:left}
+.xopt .tx{flex:1}
+.xopt .tx b{font-size:16px}
+.erow{display:flex;align-items:center;gap:12px;min-height:72px;padding:10px 14px;border-radius:14px;background:var(--surf);border:1px solid var(--hair);text-align:left;cursor:pointer;width:100%;box-sizing:border-box;font:inherit;color:inherit}
+.erow .pv2{font-size:13px;color:var(--ink-3);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pdfpage{background:#FFFDF8;--ink:#3E3D44;--ink-3:#625E5B;color:#3E3D44;border:1px solid var(--hair);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:8px;box-shadow:0 6px 18px -10px rgba(0,0,0,.25)}
+.pdfpage i{display:block;height:7px;border-radius:4px;background:var(--fill-2)}
+.share{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.share button{display:flex;flex-direction:column;align-items:center;gap:6px;min-height:72px;border-radius:14px;border:1px solid var(--hair);background:var(--surf);font:inherit;font-size:12px;font-weight:600;color:var(--ink);cursor:pointer;justify-content:center}
+.lrow{display:flex;align-items:center;gap:4px}.lrow .row{flex:1;min-width:0}a.opt,a.row{text-decoration:none;color:var(--ink)}
+.vmrow{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;background:var(--surf);border:1px solid var(--hair);font-size:14px}
+.vmrow .tx b{font-size:15px}
+
+/* ---------- round 3: welcome, photo access, notes actions, minutes ---------- */
+.camtile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;flex:1;min-height:210px;border-radius:22px;border:1.5px solid var(--bd);background:var(--surf);font:inherit;color:var(--ink);cursor:pointer;transition:transform .12s}
+.camtile:active{transform:scale(.98)}
+.camtile b{font-size:20px}
+.camtile .ico{width:84px;height:84px;border-radius:50%;background:var(--acc);color:var(--on-acc);display:grid;place-items:center}
+.camtile.off .ico{background:var(--fill-2)}
+.meter{height:12px;border-radius:6px;background:var(--fill-2);overflow:hidden}
+.meter i{display:block;height:100%;border-radius:6px;background:var(--acc)}
+.pred{align-self:stretch;padding:16px 18px;border-radius:18px;background:var(--surf);border:1.5px solid var(--acc-d);font-size:17px;line-height:1.45;font-weight:600;text-align:center}
+.pred small{display:block;font-size:12px;font-weight:600;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.ib.mic{width:34px;height:34px;border-radius:50%;background:var(--red);color:var(--on-red)}
+.flhead{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px;font-weight:600;color:var(--ink-2)}
+.vfbox{padding:12px 14px;border-radius:14px;background:var(--fill);font-size:15px;line-height:1.45}
+.welcome{gap:16px}
+.welcome .jstage::before{width:170px;height:170px;background:#7E1D2B}
+
+/* ---------- Жако ---------- */
+.jako{display:block;flex:none;overflow:visible}
+.jako.bob{transform-origin:50% 100%;animation:bob 2.6s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:none}30%{transform:translateY(-3px) rotate(-4deg)}60%{transform:translateY(0) rotate(2deg)}}
+.jhello{display:flex;align-items:flex-end;gap:10px;flex:none}
+.bub{position:relative;flex:1;min-width:0;background:var(--surf);border:1px solid var(--hair);border-radius:16px 16px 16px 4px;padding:10px 14px;display:flex;flex-direction:column;gap:2px;font-size:14px;line-height:1.4;color:var(--ink-2);margin-bottom:10px}
+.bub b{color:var(--ink);font-size:15px}
+.jstage{position:relative;display:grid;place-items:center;flex:none}
+.jstage::before{content:"";position:absolute;width:118px;height:118px;border-radius:50%;background:var(--acc-pale);bottom:2px}
+.jstage .jako{position:relative}
+.jbadge{position:absolute;right:-4px;top:6px;width:38px;height:38px;border-radius:50%;background:var(--surf);border:1.5px solid var(--bd);display:grid;place-items:center;color:var(--ink)}
+.dots{display:flex;gap:6px;justify-content:center}
+.dots i{width:8px;height:8px;border-radius:50%;background:var(--acc-d);animation:dt 1.2s ease-in-out infinite}
+.dots i:nth-child(2){animation-delay:.15s}.dots i:nth-child(3){animation-delay:.3s}
+/* Жак states */
+.jline{display:flex;align-items:center;gap:12px;flex:none;align-self:stretch}
+.jcap{display:flex;flex-direction:column;gap:2px;font-size:13px;line-height:1.35;color:var(--ink-3);min-width:0}
+.jcap b{font-size:16px;color:var(--ink)}
+.jako .jw{animation:jw 1.4s ease-in-out infinite}.jako .jw2{animation-delay:.25s}
+@keyframes jw{0%,100%{opacity:.2}50%{opacity:1}}
+.jako .jd{animation:jw 1.2s ease-in-out infinite}.jako .jd2{animation-delay:.2s}.jako .jd3{animation-delay:.4s}
+@keyframes dt{0%,100%{opacity:.25;transform:none}40%{opacity:1;transform:translateY(-4px)}}
+
+/* ---------- palette Jak: light text on the dark ground, dark text on light surfaces ---------- */
+.layer{--ink:var(--g-ink);--ink-2:var(--g-ink2);--ink-3:var(--g-ink3);--hair:var(--g-hair);color:var(--ink)}
+.tile,.btn,.tplbtn,.chip,.k,.inp,.playbtn,.me,.addth,.drop,.draftrow,.suprow,.opt,.voice,.subbox,.recrow,.field,.seg,.csec,.erow,.vmrow,.pred,.bub,.disp,.camtile,.secrow,.hint,.res,.banner,.saved,.tag,.av,.bigbtn,.upl,.pdfpage,.share button,.tabbar,.sheet,.dlg,.lnk.danger,.err,.welcome .pred{--ink:var(--s-ink);--ink-2:var(--s-ink2);--ink-3:var(--s-ink3);--hair:var(--s-hair);color:var(--ink)}
+.sheet,.dlg{--surf:var(--sheet-surf);background:var(--sheet)}
+.tabbar{background:var(--surf);border-top:0}
+.tabind span{background:var(--rec)}
+.btn.ghost{color:var(--ink)}
+.layer .btn.ghost{--ink:var(--g-ink);color:var(--g-ink)}
+.layer .subbox .btn.ghost{--ink:var(--s-ink);color:var(--s-ink)}
+.btn.gift{background:var(--red-40);border-color:transparent;color:var(--s-ink)}
+.pill{border-color:var(--g-line)}
+.pill.dark{background:var(--dk);color:var(--on-dk);border-color:var(--dk)}
+.dot{background:var(--live)}
+.wave i,.prog{background:var(--acc)}
+.stepper .sn{background:transparent;border-color:var(--g-line)}
+.stepper li.done .sn,.steps li.done .ck{color:var(--on-acc)}
+.stepper li.now .sn{border-color:var(--acc);color:var(--g-ink);box-shadow:0 0 0 3px var(--acc-ring)}
+.stepper li.done:not(:last-child)::after{background:var(--acc)}
+.steps .ck{border-color:var(--g-line)}
+.spin{border-color:var(--g-hair);border-top-color:var(--acc)}
+.bigbtn.stop{border-color:var(--dk)}
+.bigbtn.stop i,.sidebtn .sqi{background:var(--dk)}
+.bigbtn.live::before,.bigbtn.live::after{border-color:var(--acc)}
+.sidebtn{--ink:var(--s-ink);color:var(--ink);border-color:var(--bd)}
+.lnk.danger{color:var(--rec);background:var(--surf);border-radius:12px;padding:0 14px;text-decoration:none}
+.err{background:var(--surf);color:var(--rec);padding:8px 12px;border-radius:10px}
+.jhello .jako,.jline .jako{background:var(--surf);border-radius:22px}
+.welcome .jstage::before,.jstage.burg::before{background:var(--red)}
+.jbadge{--ink:var(--s-ink);color:var(--ink)}
+.camtile.off .ico{background:var(--fill-2)}
+.meter{background:var(--fill-2)}
+.meter i{box-shadow:none}
+.tag.okv{background:var(--ok)}
+.tag.net{background:var(--fill-2)}
+.toast{background:var(--dk);color:var(--on-dk)}
+.toast svg{color:var(--on-dk)}
+.row.fresh{animation:freshDk 2.6s ease-out}
+@keyframes freshDk{0%,45%{background:var(--hl-a)}100%{background:transparent}}
+.csec.hl{animation:fresh 2.6s ease-out}
+@keyframes fresh{0%,45%{background:var(--hl)}100%{background:var(--surf)}}
+
+/* round 5: confirm buttons, AI diagnosis note, patient search, owner summary */
+.cfm{display:flex;align-items:center;gap:10px;margin-top:2px}
+.cfm .cbtn{width:52px;height:52px;border-radius:16px;border:0;background:var(--acc);color:var(--on-acc);display:grid;place-items:center;cursor:pointer;flex:none;transition:transform .12s}
+.cfm .cbtn:active{transform:scale(.94)}
+.cfm small{font-size:12px;font-weight:600;color:var(--ink-3)}
+.cfm .why{font-size:13px;color:var(--ink-3);line-height:1.35}
+.aitag{font-size:11.5px;font-weight:500;color:var(--ink-3);text-transform:none;letter-spacing:0;margin-left:8px}
+.psearch{display:flex;flex-direction:column;gap:6px;flex:none;position:relative}
+.psug{display:flex;flex-direction:column;border-radius:14px;background:var(--surf);overflow:hidden;--ink:var(--s-ink);--ink-3:var(--s-ink3);color:var(--ink);box-shadow:0 10px 24px -12px rgba(0,0,0,.45)}
+.psug{display:flex}
+.psug button{display:flex;align-items:center;gap:12px;min-height:58px;padding:8px 14px;border:0;border-bottom:1px solid var(--s-hair);background:transparent;font:inherit;color:inherit;text-align:left;cursor:pointer}
+.psug button:last-child{border-bottom:0}
+.psug button:hover{background:var(--fill)}
+.psug mark{background:var(--acc-pale);color:inherit;border-radius:3px;padding:0 1px}
+.pchosen{display:flex;align-items:center;gap:12px;min-height:60px;padding:8px 14px;border-radius:14px;background:var(--surf);flex:none;--ink:var(--s-ink);--ink-3:var(--s-ink3);color:var(--ink)}
+.dsec{display:flex;flex-direction:column;gap:6px;padding:14px;border-radius:16px;background:var(--surf);--ink:var(--s-ink);--ink-3:var(--s-ink3);color:var(--ink)}
+.dsec b{font-size:15px}
+.dsec textarea{border:0;background:transparent;font:inherit;font-size:15px;line-height:1.5;color:inherit;resize:none;padding:0;min-height:66px}
+.dsec textarea:focus{outline:2px solid var(--focus);outline-offset:4px;border-radius:6px}
+
+.stars{display:flex;justify-content:center;gap:6px}
+.star{width:52px;height:52px;border:0;background:none;color:#AEAEB6;display:grid;place-items:center;cursor:pointer;border-radius:12px;transition:transform .12s,color .15s}
+.star:active{transform:scale(.9)}
+.star.on{color:#E8C400}
+.star.on svg{fill:#FFF175}
+.btn[disabled]{opacity:.45;cursor:default}
+
+.seg button.on{color:var(--on-acc)}
+.tile.pri .s{color:var(--on-acc);opacity:.85}
+.tile.pri .ring{border-color:var(--on-acc)}
+.tag.warn{color:#2B2930}
+.star{color:var(--bd)}
+.thm{display:flex;flex-direction:column;align-items:center;gap:4px;background:none;border:0;cursor:pointer;color:var(--ink);padding:0}
+.thm .thi{width:44px;height:44px;border-radius:50%;background:var(--surf);color:var(--s-ink);display:grid;place-items:center;border:1px solid var(--bd)}
+.thm small{font-size:11px;font-weight:600;color:var(--ink-3)}
+.phone,.phone .layer,.tabbar,.tile,.btn{transition:background-color .35s,color .35s,border-color .35s}
+
+@media (prefers-reduced-motion: reduce){
+  .jako.bob,.dots i,.jako .jw,.jako .jd{animation:none}
+  .bigbtn.live::before,.bigbtn.live::after,.wave i,.dot,.spin,.row.fresh{animation:none}
+  .spin{border-top-color:var(--ink)}
+}
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+  <div class="phonebox">
+    <div class="phone" id="phone" data-th="dark">
+      <div class="app">
+        <div class="stage" id="stage"></div>
+        <div class="recbar" id="recbar" hidden></div>
+        <nav class="tabbar" id="tabbar" aria-label="Разделы">
+          <span class="tabind" id="tabind"><span></span></span>
+          <button class="tab" data-tab="cards"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>Карты</button>
+          <button class="tab" data-tab="calc"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M8 6h8M8 11h.01M12 11h.01M16 11h.01M8 15h.01M12 15h.01M16 15h.01M8 19h.01M12 19h.01M16 19h.01"/></svg>Калькулятор</button>
+          <button class="tab" data-tab="photo"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h3l2-3h8l2 3h3v12H3z"/><path d="M12 10v6M9 13h6"/></svg>Фото</button>
+          <button class="tab" data-tab="notes"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h10l4 4v14H5z"/><path d="M15 3v4h4M8 12h8M8 16h6"/></svg>Заметки</button>
+        </nav>
+        <div class="ovr" id="ovr"></div>
+      </div>
+    </div>
+  </div>
+
+  <aside class="side" aria-label="Управление прототипом">
+    <div class="grp" style="gap:12px">
+      <h1>Прототип вет-приложения</h1>
+      <p>Нажимайте прямо на экран телефона: кнопки, нижнее меню и человечек справа вверху работают. Клички, владельцы, папки и тариф здесь для примера.</p>
+    </div>
+    <div class="grp">
+      <h2>Сценарии</h2>
+      <button class="sbtn" data-sc="restart">Начать сначала</button>
+      <button class="sbtn" data-sc="empty" aria-pressed="false" id="scEmpty">Пустые экраны<small>нет карт и заметок</small></button>
+      <button class="sbtn" data-sc="bgrec">Запись в фоне<small>идёт запись, врач в калькуляторе</small></button>
+      <button class="sbtn" data-sc="huh">Жак не расслышал запись</button>
+      <button class="sbtn" data-sc="offline">Нет сети</button>
+      <button class="sbtn" data-sc="offlineCard">Нет сети во время карты</button>
+    </div>
+    <div class="grp">
+      <h2>Быстрый переход</h2>
+      <div class="jumps">
+        <button class="jbtn" data-j="welcome">Приветствие</button>
+        <button class="jbtn" data-j="cards">Карты</button>
+        <button class="jbtn" data-j="newcard">Новая карта</button>
+        <button class="jbtn" data-j="mycards">Мои карты</button>
+        <button class="jbtn" data-j="templates">Шаблоны</button>
+        <button class="jbtn" data-j="draft">Черновик</button>
+        <button class="jbtn" data-j="card">Готовая карта</button>
+        <button class="jbtn" data-j="trash">Корзина</button>
+        <button class="jbtn" data-j="calc">Калькулятор</button>
+        <button class="jbtn" data-j="dosage">Расчёт дозировки</button>
+        <button class="jbtn" data-j="photo">Фото</button>
+        <button class="jbtn" data-j="notes">Заметки</button>
+        <button class="jbtn" data-j="profile">Мой профиль</button>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<script>
+(function(){
+const ICONS={
+ user:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>',
+ cards:'<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>',
+ camera:'<path d="M3 8h3l2-3h8l2 3h3v12H3z"/><circle cx="12" cy="13" r="3.5"/>',
+ notes:'<path d="M5 3h10l4 4v14H5z"/><path d="M15 3v4h4M8 12h8M8 16h6"/>',
+ mic:'<rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>',
+ plus:'<path d="M12 5v14M5 12h14"/>',
+ back:'<path d="M15 6l-6 6 6 6"/>',
+ chev:'<path d="M9 6l6 6-6 6"/>',
+ chevd:'<path d="M6 9l6 6 6-6"/>',
+ folder:'<path d="M3 6h6l2 2h10v11H3z"/>',
+ link:'<path d="M10 14a4 4 0 0 0 6 0l3-3a4 4 0 0 0-6-6l-1 1M14 10a4 4 0 0 0-6 0l-3 3a4 4 0 0 0 6 6l1-1"/>',
+ search:'<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>',
+ image:'<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 17l-5-5-9 8"/>',
+ check:'<path d="M5 12l5 5 9-10"/>',
+ pen:'<path d="M4 20h4l11-11-4-4L4 16z"/>',
+ chat:'<path d="M4 5h16v11H9l-5 4z"/><path d="M9 10h6"/>',
+ logout:'<path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10"/>',
+ wifioff:'<path d="M2 8.5a15 15 0 0 1 20 0M5 12a10 10 0 0 1 14 0M8.5 15.5a5 5 0 0 1 7 0"/><circle cx="12" cy="19" r="1"/><path d="M3 3l18 18"/>',
+ x:'<path d="M6 6l12 12M18 6L6 18"/>',
+ sliders:'<path d="M4 6h16M4 12h16M4 18h10"/><circle cx="18" cy="18" r="2"/>',
+ pill:'<rect x="3" y="8.5" width="18" height="7" rx="3.5" transform="rotate(-45 12 12)"/><path d="M9.5 9.5l5 5"/>',
+ upload:'<path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v4h16v-4"/>',
+ sparkle:'<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/>',
+ trash:'<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
+ restore:'<path d="M4 4v6h6"/><path d="M20 12a8 8 0 1 0-2.3 5.7"/><path d="M4 10a8 8 0 0 1 1-1.6"/>',
+ copy:'<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/>',
+ pdf:'<path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9 13h6M9 17h4"/>',
+ vm:'<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4M12 7v6M9 10l3 3 3-3"/>',
+ pause:'<rect x="6" y="5" width="4" height="14" rx="1" fill="currentColor" stroke="none"/><rect x="14" y="5" width="4" height="14" rx="1" fill="currentColor" stroke="none"/>',
+ ext:'<path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>',
+ dots:'<circle cx="5" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.6" fill="currentColor" stroke="none"/>',
+ moon:'<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>',
+ sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+ star:'<path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.8z"/>',
+ play:'<path d="M8 5v14l11-7z" fill="currentColor" stroke="none"/>'
+};
+const ic=(n,s=22,w=1.8)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n]}</svg>`;
+const pad=n=>String(n).padStart(2,'0');
+const fmt=s=>pad(Math.floor(s/60))+':'+pad(s%60);
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const ddmm=iso=>{const p=iso.split('-');return p[2]+'.'+p[1]};
+const dmy=d=>pad(d.getDate())+'.'+pad(d.getMonth()+1)+'.'+d.getFullYear();
+const nowStr=()=>{const d=new Date();return pad(d.getDate())+'.'+pad(d.getMonth()+1)+', '+pad(d.getHours())+':'+pad(d.getMinutes())};
+const todayISO=()=>{const d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())};
+const plural=(n,a,b,c)=>{const m10=n%10,m100=n%100;return m10===1&&m100!==11?a:(m10>=2&&m10<=4&&(m100<12||m100>14)?b:c)};
+
+function init(){return{
+ stack:[{id:'welcome'}],tab:'cards',
+ tpl:'Терапевт',templates:[{n:'Терапевт',own:false},{n:'Хирург',own:false},{n:'Дерматолог',own:false}],
+ tplTab:'list',newSections:['Жалобы','Осмотр'],tplName:'',
+ rec:'idle',sec:0,tm:null,cardPhotos:0,
+ sort:'date',
+ cards:[
+  {id:1,name:'Барсик',sp:'Кот',age:'6 лет',w:'4,2 кг',owner:'Иванова А.',d:'2026-10-26',photos:2,tpl:'Терапевт'},
+  {id:2,name:'Рекс',sp:'Собака',age:'9 лет',w:'31 кг',owner:'Петров С.',d:'2026-10-24',photos:0,tpl:'Хирург'},
+  {id:3,name:'Луна',sp:'Кошка',age:'2 года',w:'3,6 кг',owner:'Смирнова Е.',d:'2026-10-21',photos:1,tpl:'Терапевт'},
+  {id:4,name:'Кеша',sp:'Попугай',age:'3 года',w:'0,1 кг',owner:'Орлова М.',d:'2026-10-18',photos:0,tpl:'Терапевт'},
+  {id:5,name:'Бублик',sp:'Собака',age:'4 года',w:'12,5 кг',owner:'Кузнецов Д.',d:'2026-10-12',photos:3,tpl:'Дерматолог'},
+  {id:6,name:'Барни',sp:'Собака',age:'1 год',w:'8 кг',owner:'Соколова Т.',d:'2026-09-30',photos:0,tpl:'Терапевт'},
+  {id:7,name:'Бусинка',sp:'Кролик',age:'2 года',w:'1,9 кг',owner:'Лебедева О.',d:'2026-09-14',photos:1,tpl:'Терапевт'}],
+ patient:null,gal:null,galThen:null,
+ folders:[
+  {id:1,n:'Анализы',photos:3,notes:['Нормы ОАК у кошек','Биохимия: что смотреть']},
+  {id:2,n:'Препараты',photos:1,notes:['Список на заказ']},
+  {id:3,n:'Протоколы',photos:0,notes:['Вакцинация щенков']}],
+ links:[{t:'Справочник препаратов',u:'example.com/drugs'},{t:'Таблица инфузий',u:'example.com/infusion'}],
+ drafts:[{id:101,tpl:'Хирург',sec:74,photos:1,text:'',when:'29.10, 18:20',net:false}],trash:[],vmLinked:true,edit:null,secMode:'voice',voiceMode:'add',secRec:false,hl:null,
+ profile:{name:'Анна Смирнова',email:'anna@example.ru',login:'anna.vet',plan:'Стандарт',until:new Date(2026,10,26),minLeft:340,minTotal:600},cam:null,camThen:false,theme:(()=>{try{return localStorage.getItem('vetTheme')||'dark'}catch(e){return 'dark'}})(),ntrash:[],noteEdit:null,pred:null,vf:null,buyN:300,giftN:60,
+ calc:{cur:'0',prev:null,op:null,fresh:false},
+ dose:{listening:false,drug:'',sp:'',w:'',res:null,err:null},
+ renewN:12,emptyMode:false,bk:null,formTok:0,offRet:null,ov:null,sheetCb:null,pop:false,L:null
+}}
+let S=init();
+
+const phone=document.getElementById('phone'),stage=document.getElementById('stage'),ovr=document.getElementById('ovr'),tabbar=document.getElementById('tabbar'),tabind=document.getElementById('tabind');
+const RM=window.matchMedia('(prefers-reduced-motion: reduce)');
+const A=(el,kf,d,o)=>el.animate(kf,Object.assign({duration:RM.matches?1:d,easing:'cubic-bezier(.22,.8,.24,1)',fill:'both'},o||{}));
+const cur=()=>S.stack[S.stack.length-1];
+const card=id=>S.cards.find(c=>c.id==id);
+const folder=id=>S.folders.find(f=>f.id==id);
+const draftById=id=>S.drafts.find(d=>d.id==id);
+const curDraft=()=>cur().id==='draft'?draftById(cur().p):null;
+function secsFor(c){if(!c.secs)c.secs=[{t:'Жалобы',v:'Плановый осмотр по просьбе владельца.'},{t:'Осмотр',v:'Общее состояние удовлетворительное. Температура в норме.'},{t:'Диагноз',v:'Клинически здоров.'},{t:'Назначения',v:'Повторный осмотр через 6 месяцев.'}];return c.secs}
+function draftRow(d){return `<div class="drow"><button class="draftrow" data-go="draft" data-p="${d.id}">${ic('pen',22)}<span class="tx"><b>Черновик · ${esc(d.tpl)}</b><span class="s">${d.net?'Ждёт сети · ':''}сохранён ${d.when}${d.sec?' · запись '+fmt(d.sec):''}</span></span></button><button class="ib del" data-act="askDelDraft" data-p="${d.id}" aria-label="Удалить черновик">${ic('trash',20)}</button></div>`}
+
+function hd(title,o){o=o||{};const me=o.me===undefined?true:o.me;
+ return `<header class="hd"><div class="hd-l">${o.back?`<button class="bk" data-back>${ic('back',18)}${o.back}</button>`:''}<h1 class="h1">${title}</h1></div>${me==='on'?`<span class="me on" aria-current="page" aria-label="Мой профиль">${ic('user',22)}</span>`:me?`<button class="me" data-go="profile" aria-label="Мой профиль">${ic('user',22)}</button>`:''}</header>`}
+const thumbs=n=>Array.from({length:n},()=>`<span class="th">${ic('image',22,1.5)}</span>`).join('');
+const tplBtn=t=>`<button class="tplbtn" data-act="openTpl"><span class="tx"><span class="lbl">Шаблон</span><b>${esc(t)}</b></span><span class="ch">Сменить${ic('chevd',18)}</span></button>`;
+const WAVE=[22,38,52,28,46,58,34,20,48,30,16].map((h,i)=>`<i style="--h:${h}px;animation-delay:${(i*0.08).toFixed(2)}s"></i>`).join('');
+const recRow=(t,sec)=>`<div class="recrow"><button class="playbtn" data-act="play" aria-label="Прослушать запись">${ic('play',16)}</button><span class="tx"><b>${t}</b><span class="s num">${fmt(sec)}</span></span><span class="prog"></span></div>`;
+const SORTS=[['date','Дате'],['name','Кличке'],['owner','Владельцу'],['sp','Виду животного']];
+
+function recZone(){
+ if(S.rec==='idle')return `<button class="bigbtn" data-act="startRec" aria-label="Начать запись">${ic('mic',52,1.6)}</button><b class="rl">Запись</b><span class="s">Нажмите, чтобы надиктовать приём</span>`;
+ if(S.rec==='huh')return `${jline('huh','Не расслышал','«Повторите, пожалуйста». Запись слишком короткая или тихая',76)}<button class="bigbtn" data-act="startRec" aria-label="Записать снова">${ic('mic',52,1.6)}</button><b class="rl">Записать снова</b>`;
+ if(S.rec==='rec')return `${jline('rec','Запись','«Слушаю внимательно!»',60)}<span class="pill"><span class="dot"></span>Запись · <span id="rtime">${fmt(S.sec)}</span></span><div class="wave" aria-hidden="true">${WAVE}</div><div class="recbtns"><button class="sidebtn" data-act="pauseRec" aria-label="Пауза">${ic('pause',22)}</button><button class="bigbtn stop live" data-act="stopRec" aria-label="Остановить запись"><i></i></button><span></span></div><b class="rl">Стоп</b><span class="s c">Можно перейти в другой раздел, запись продолжится</span>`;
+ if(S.rec==='pause')return `${jline('','Пауза','«Жду, когда продолжим»',60)}<span class="pill">Пауза · <span id="rtime">${fmt(S.sec)}</span></span><div class="wave paused" aria-hidden="true">${WAVE}</div><div class="recbtns"><button class="sidebtn" data-act="stopRec" aria-label="Остановить запись"><span class="sqi"></span></button><button class="bigbtn" data-act="resumeRec" aria-label="Продолжить запись">${ic('mic',52,1.6)}</button><span></span></div><b class="rl">Продолжить</b>`;
+ return `<span class="pill dark"><span class="sq"></span>Стоп · ${fmt(S.sec)}</span>${recRow('Запись 1',S.sec)}<button class="lnkbtn" data-act="startRec">${ic('mic',20)}Продолжить запись</button>`;
+}
+function sorted(){const a=S.cards.slice();const k=S.sort;
+ a.sort((x,y)=>k==='date'?(y.d.localeCompare(x.d)||y.id-x.id):String(x[k]).localeCompare(String(y[k]),'ru'));return a}
+function cardRows(mode){return sorted().map(c=>`<button class="row${c.fresh?' fresh':''}" ${mode==='pick'?`data-act="savePhotoCard"`:`data-go="card"`} data-p="${c.id}" data-s="${esc((c.name+' '+c.sp+' '+c.owner).toLowerCase())}"><span class="av">${esc(c.name[0])}</span><span class="tx"><b>${esc(c.name)}</b><span class="s">${esc(c.sp)} · ${esc(c.owner)}</span></span>${mode==='pick'?'<span class="end">Сюда</span>':`<span class="s num">${ddmm(c.d)}</span>`}</button>`).join('')}
+function tplContent(){
+ if(S.tplTab==='list')return `<div class="list">${S.templates.map(t=>`<button class="row" data-act="useTpl" data-p="${esc(t.n)}"><span class="tx"><b>${esc(t.n)}</b><span class="s">${t.own?'Свой':'Стандартный'}</span></span>${S.tpl===t.n?'<span class="tag dark">Выбран</span>':ic('chev',20)}</button>`).join('')}</div>`;
+ return `<label class="upl" for="tplFile">${S.tplParsing?'<span class="spin sm"></span>':ic('upload',26)}<span class="tx"><b>${S.tplDoc?esc(S.tplDoc):'Загрузить свой документ'}</b><span class="s">${S.tplParsing?'Разбираю документ…':S.tplDoc?'Разделы взяты из документа, проверьте их ниже':'Word, PDF или фото бланка'}</span></span></label><input type="file" id="tplFile" accept=".doc,.docx,.pdf,.txt,image/*" hidden>
+ <div class="or"><i></i>или вручную<i></i></div>
+ <label class="fl">Название шаблона<input class="inp" id="tplName" value="${esc(S.tplName)}" placeholder="Например, «Кардиолог»" autocomplete="off"></label>
+ <div class="sect"><span class="fl">Разделы карты</span>${S.newSections.map((s,i)=>`<div class="secrow"><span>${i+1}. ${esc(s)}</span><button class="ib" data-act="delSec" data-p="${i}" aria-label="Удалить раздел">${ic('x',18)}</button></div>`).join('')}
+ <button class="btn dash sm" data-act="addSec">${ic('plus',18)}Добавить раздел</button></div>
+ <button class="btn pri" data-act="saveTpl">Сохранить шаблон</button>`}
+const calcExpr=()=>S.calc.op&&S.calc.prev!=null?fmtNum(S.calc.prev)+' '+S.calc.op:'';
+const KEYS=['C','±','%','÷','7','8','9','×','4','5','6','−','1','2','3','+','0',',','='];
+const kcls=k=>k==='='?' eq':k==='0'?' z':'C±%'.includes(k)?' fn':'÷×−+'.includes(k)?(' op'+(S.calc.op===k&&S.calc.fresh?' act':'')):'';
+/* Жак: flat bust in the style of the mascot sheet (light grey head, white eye patch, yellow eye, black beak, red accents). Faces left.
+   state: '' neutral · 'rec' listening (sound arcs) · 'proc' working (eye closed, dots) · 'done' (crest + red check) · 'huh' (question badge) */
+function jako(h,cls,state){state=state||'';const w=h;
+ const eye=state==='proc'
+  ?'<path d="M48 53 q8 7 16 0" fill="none" stroke="#1F2023" stroke-width="3.2" stroke-linecap="round"/>'
+  :'<circle cx="56" cy="51" r="7.5" fill="#F2C318"/><circle cx="56" cy="51" r="3.4" fill="#1B1C1E"/><circle cx="54.6" cy="49.6" r="1.2" fill="#fff"/>';
+ const crest=state==='done'?'<path d="M48 30 L52 13 L59 26 L66 11 L71 28Z" fill="#AEAEB6"/>':'';
+ const extra=state==='rec'?'<path class="jw" d="M98 44 q7 10 0 20" fill="none" stroke="#A82828" stroke-width="3.5" stroke-linecap="round"/><path class="jw jw2" d="M106 38 q11 16 0 32" fill="none" stroke="#A82828" stroke-width="3.5" stroke-linecap="round"/>'
+  :state==='proc'?'<g fill="#3A3C40"><circle class="jd" cx="80" cy="14" r="3.6"/><circle class="jd jd2" cx="91" cy="14" r="3.6"/><circle class="jd jd3" cx="102" cy="14" r="3.6"/></g>'
+  :state==='done'?'<circle cx="98" cy="24" r="13" fill="#A82828"/><path d="M92 24 l4.5 4.5 l8-9" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>'
+  :state==='huh'?'<circle cx="98" cy="24" r="13" fill="#1F2023"/><text x="98" y="30.5" text-anchor="middle" font-family="Golos Text,system-ui,sans-serif" font-size="18" font-weight="700" fill="#fff">?</text>':'';
+ return `<svg class="jako${cls?' '+cls:''}" width="${w}" height="${h}" viewBox="0 0 120 120" aria-hidden="true">
+ <path d="M24 120 C24 94 41 80 62 80 C83 80 100 94 100 120Z" fill="#7B7782"/>
+ ${crest}<circle cx="62" cy="54" r="33" fill="#AEAEB6"/>
+ <path d="M54 30 q6 3 12 0 M68 29 q6 3 12 0 M74 40 q5 3 10 0 M76 52 q5 3 10 0" fill="none" stroke="#9A9AA3" stroke-width="2" stroke-linecap="round"/>
+ <circle cx="57" cy="51" r="15" fill="#FFFFFF"/>${eye}
+ <path d="M42 56 C30 53 19 61 21 75 C25 70 30 68 36 68 C41 67 45 62 42 56Z" fill="#1F2023"/>
+ ${extra}
+</svg>`}
+/* Жак on the welcome screen: starts in profile (as everywhere), then turns his head to face the user, tilts it a little and blinks. */
+function jakoTurn(h){return `<svg class="jako jturn" width="${h}" height="${h}" viewBox="0 0 120 120" role="img" aria-label="Жак поворачивает голову и смотрит на вас">
+ <path d="M24 120 C24 94 41 80 62 80 C83 80 100 94 100 120Z" fill="#7B7782"/>
+ <g class="jt-head">
+  <circle cx="62" cy="54" r="33" fill="#AEAEB6"/>
+  <path d="M54 30 q6 3 12 0 M68 29 q6 3 12 0 M74 40 q5 3 10 0 M76 52 q5 3 10 0" fill="none" stroke="#9A9AA3" stroke-width="2" stroke-linecap="round"/>
+  <g class="jt-prof">
+   <circle cx="57" cy="51" r="15" fill="#FFFFFF"/>
+   <circle cx="56" cy="51" r="7.5" fill="#F2C318"/><circle cx="56" cy="51" r="3.4" fill="#1B1C1E"/><circle cx="54.6" cy="49.6" r="1.2" fill="#fff"/>
+   <path d="M42 56 C30 53 19 61 21 75 C25 70 30 68 36 68 C41 67 45 62 42 56Z" fill="#1F2023"/>
+  </g>
+  <g class="jt-front">
+   <path d="M33 50 C33 39 42 34 50 37 C55 39 58 43 62 43 C66 43 69 39 74 37 C82 34 91 39 91 50 C91 61 83 66 74 64 C69 63 66 60 62 60 C58 60 55 63 50 64 C41 66 33 61 33 50Z" fill="#FFFFFF"/>
+   <g class="jt-eyes">
+    <circle cx="48" cy="50" r="7.5" fill="#F2C318"/><circle cx="48" cy="50" r="3.4" fill="#1B1C1E"/><circle cx="46.6" cy="48.6" r="1.3" fill="#fff"/>
+    <circle cx="76" cy="50" r="7.5" fill="#F2C318"/><circle cx="76" cy="50" r="3.4" fill="#1B1C1E"/><circle cx="74.6" cy="48.6" r="1.3" fill="#fff"/>
+   </g>
+   <path d="M53 59 C53 53 71 53 71 59 C71 69 67 77 62 81 C57 77 53 69 53 59Z" fill="#1F2023"/>
+   <path d="M57 58 q5 -3 10 0" fill="none" stroke="#5A5A62" stroke-width="2" stroke-linecap="round"/>
+  </g>
+ </g>
+</svg>`}
+function jline(state,title,text,h){return `<div class="jline">${jako(h||64,'',state)}<span class="jcap"><b>${title}</b><span>${text}</span></span></div>`}
+function emptyArt(){return `<span class="jstage">${jako(104)}</span>`}
+
+const SCR={
+ cards(){return{tab:'cards',title:'Карты',html:hd('Карты')+`<div class="bd">
+  <div class="jhello">${jako(64,'bob')}<div class="bub"><b>Я Жак</b><span>${S.drafts.length?`Черновиков: ${S.drafts.length}. Их можно доделать в любой момент.`:'Нажмите «Новая карта» и надиктуйте приём, а я заполню карту.'}</span></div></div>
+  <button class="tile pri" data-act="newCard"><span class="ring">${ic('mic',26)}</span><span class="tx"><span class="t big">Новая карта</span><span class="s">Надиктовать приём голосом</span></span></button>
+  <button class="tile" data-go="mycards">${ic('cards',26)}<span class="tx"><span class="t">Мои карты</span><span class="s">${S.cards.length?S.cards.length+' '+plural(S.cards.length,'пациент','пациента','пациентов'):'Пока пусто'}</span></span>${ic('chev',20)}</button>
+  <button class="tile" data-go="templates">${ic('sliders',26)}<span class="tx"><span class="t">Настроить шаблоны</span><span class="s">Сейчас выбран: ${esc(S.tpl)}</span></span>${ic('chev',20)}</button>
+  <span class="lbl" style="margin-top:6px">Черновики${S.drafts.length?' · '+S.drafts.length:''}</span>
+  ${S.drafts.length?`<div class="col" style="gap:8px;margin-top:-6px">${S.drafts.map(draftRow).join('')}</div>`:'<span class="s" style="margin-top:-8px">Черновиков нет. Недоделанные карты будут здесь.</span>'}
+  <button class="row tight" data-go="trash" style="margin:4px 0 0;border-bottom:0">${ic('trash',22)}<span class="tx"><b>Корзина</b><span class="s">${S.trash.length?S.trash.length+' '+plural(S.trash.length,'объект','объекта','объектов')+' · хранятся 30 дней':'Пусто'}</span></span>${ic('chev',20)}</button>
+ </div>`}},
+ newcard(){return{tab:'cards',title:'Новая карта',html:hd('Новая карта',{back:'Карты'})+`<div class="bd">
+  ${stepper(S.rec==='stop'?2:1)}
+  ${tplBtn(S.tpl)}
+  ${patientBox()}
+  <div class="recz" id="recz">${recZone()}</div>
+  <div class="sect"><span class="lbl">Фото к карте</span><div class="thumbs">${thumbs(S.cardPhotos)}<button class="addth" data-act="addCardPhoto" aria-label="Добавить фото">${ic('plus',26)}</button></div></div>
+  ${S.rec==='stop'?`<div class="appear col" style="gap:8px"><button class="btn pri" data-act="saveCard">${ic('sparkle',20)}Сформировать карту</button><button class="btn sm" data-act="saveDraftNew">${ic('plus',18)}Новая карта, эту — в черновики</button><span class="s c">Сначала появится предварительная карта, её можно проверить и исправить</span></div>`:''}
+ </div>`}},
+ mycards(){
+  if(!S.cards.length)return{tab:'cards',title:'Мои карты',html:hd('Мои карты',{back:'Карты'})+`<div class="bd center">${emptyArt('cards')}<b class="et">Пока нет карт</b><span class="s">Здесь появятся карты пациентов после первой записи</span><button class="btn pri auto" data-act="newCard">${ic('plus',20)}Создать новую карту</button></div>`};
+  return{tab:'cards',title:'Мои карты',html:hd('Мои карты',{back:'Карты'})+`<div class="bd">
+  <label class="field">${ic('search',18)}<input id="q" type="search" placeholder="Кличка, владелец или вид" aria-label="Поиск по картам" autocomplete="off"></label>
+  <div class="sect"><span class="s">Сортировать по:</span><div class="chips" id="chips">${SORTS.map(([k,l])=>`<button class="chip${S.sort===k?' on':''}" data-act="sort" data-p="${k}">${l}</button>`).join('')}</div></div>
+  <div class="list" id="clist">${cardRows('go')}</div>
+ </div>`}},
+ card(p){const c=card(p.p)||S.cards[0];return{tab:'cards',title:c.name,html:hd(esc(c.name),{back:'Мои карты'})+`<div class="bd">
+  <div class="meta"><span class="s">${esc(c.sp)} · ${esc(c.owner)} · ${ddmm(c.d)}</span><span style="display:flex;gap:6px"><span class="tag">${esc(c.tpl||S.tpl)}</span>${c.vm?'<span class="tag okv">В Vetmanager</span>':''}</span></div>
+  ${secsFor(c).map((x,i)=>`<div class="csec${S.hl&&S.hl.id==c.id&&S.hl.i.includes(i)?' hl':''}"><span class="lbl">${esc(x.t)}</span><p>${esc(x.v)}</p></div>`).join('')}
+  ${recRow('Запись приёма',c.sec||95)}
+  <div class="sect"><span class="lbl">Фото</span><div class="thumbs">${thumbs(c.photos)}<button class="addth" data-act="addPhotoToCard" data-p="${c.id}" aria-label="Добавить фото">${ic('plus',26)}</button></div></div>
+  <button class="btn" data-act="editCard" data-p="${c.id}">${ic('pen',20)}Редактировать</button>
+  <button class="btn pri" data-go="discharge" data-p="${c.id}">${ic('chat',20)}Сформировать выписку для владельца</button>
+  <div class="grid3"><button class="btn" data-act="copyCard" data-p="${c.id}">${ic('copy',16)}Копия</button><button class="btn" data-act="pdfCard" data-p="${c.id}">${ic('pdf',16)}PDF</button><button class="btn pri" data-act="vmCard" data-p="${c.id}">${ic('vm',16)}Vetmanager</button></div>
+  <button class="lnk danger" style="align-self:center" data-act="askDelCard" data-p="${c.id}">Удалить карту</button>
+ </div>`}},
+ discharge(p){const c=card(p.p);const t=S.dis&&S.dis.id==c.id?S.dis:(S.dis=Object.assign({id:c.id},ownerText(c)));
+  const blk=(k,h)=>`<div class="dsec"><b>${h}</b><textarea data-dk="${k}" aria-label="${h}">${esc(t[k])}</textarea></div>`;
+  return{tab:'cards',title:'Выписка для владельца',html:hd('Выписка',{back:esc(c.name)})+`<div class="bd">
+  ${jline('done','Выписка готова','«Написал простым языком. Проверьте перед отправкой»',56)}
+  <span class="s">Для ${esc(c.owner)} · ${esc(c.name)} · ${ddmm(c.d)}. Любой абзац можно поправить.</span>
+  ${blk('what','Что с питомцем')}${blk('home','Что делать дома')}${blk('when','Когда прийти снова')}${blk('urgent','Когда звонить срочно')}
+  <button class="btn pri" data-act="disSend">${ic('chat',20)}Отправить владельцу</button>
+  <div class="grid2"><button class="btn sm" data-act="disCopy">${ic('copy',18)}Скопировать</button><button class="btn sm" data-act="disPdf">${ic('pdf',18)}PDF</button></div>
+ </div>`}},
+ cardedit(p){const c=card(p.p);const E=S.edit;return{tab:'cards',title:'Редактирование',html:hd('Редактирование',{back:'Карта',me:false})+`<div class="bd">
+  <span class="s" style="font-size:15px">Выберите раздел, который нужно изменить. Править можно голосом или текстом.</span>
+  <div class="col" style="gap:10px">${E.secs.map((x,i)=>`<button class="erow" data-go="secedit" data-p="${i}"><span class="tx"><span style="display:flex;align-items:center;gap:8px"><b style="font-size:16px">${esc(x.t)}</b>${E.changed.includes(i)?'<span class="tag okv">Изменено</span>':''}</span><span class="pv2">${esc(x.v)}</span></span>${ic('chev',20)}</button>`).join('')}</div>
+  <div class="col" style="gap:8px;margin-top:auto"><button class="btn pri" data-act="saveEdits">${ic('check',20,2.2)}Сохранить карту</button><button class="btn ghost" data-back>Отменить изменения</button></div>
+ </div>`}},
+ secedit(p){const E=S.edit;const i=+p.p;const x=E.secs[i];const voice=S.secMode==='voice';return{tab:'cards',title:x.t,html:hd(esc(x.t),{back:'Разделы',me:false})+`<div class="bd">
+  <div class="seg${voice?'':' r'}" role="tablist"><span class="ind"></span><button role="tab" aria-selected="${voice}" class="${voice?'on':''}" data-act="secMode" data-p="voice">Голосом</button><button role="tab" aria-selected="${!voice}" class="${voice?'':'on'}" data-act="secMode" data-p="text">Текстом</button></div>
+  ${voice?`<div class="csec${S.hl==='sec'?' hl':''}"><span class="lbl">Сейчас в разделе</span><p id="secv">${esc(x.v)}</p></div>
+   <div class="chips">${[['add','Дописать'],['replace','Заменить']].map(([k,l])=>`<button class="chip${S.voiceMode===k?' on':''}" data-act="voiceMode" data-p="${k}">${l}</button>`).join('')}</div>
+   <div class="col" style="align-items:center;gap:12px;margin-top:10px">${S.secRec?`${jline('rec','Слушаю','«Говорите, я запишу в раздел»',56)}<div class="wave" aria-hidden="true">${WAVE}</div><button class="bigbtn mid stop live" data-act="secStop" aria-label="Остановить"><i style="width:30px;height:30px"></i></button><b class="rl">Стоп</b>`:`<button class="bigbtn mid" data-act="secRec" aria-label="Надиктовать">${ic('mic',36,1.6)}</button><b class="rl">${S.voiceMode==='add'?'Надиктовать дополнение':'Надиктовать заново'}</b>`}</div>`
+  :`<label class="fl grow">Текст раздела<textarea class="inp" id="setext" data-se="${i}">${esc(x.v)}</textarea></label>`}
+  <button class="btn pri" style="margin-top:auto" data-act="secDone" data-p="${i}">Готово</button>
+ </div>`}},
+ trash(){
+  if(!S.trash.length)return{tab:'cards',title:'Корзина',html:hd('Корзина',{back:'Карты'})+`<div class="bd center">${emptyArt()}<b class="et">Корзина пуста</b><span class="s">Удалённые карты и черновики хранятся здесь 30 дней</span></div>`};
+  return{tab:'cards',title:'Корзина',html:hd('Корзина',{back:'Карты'})+`<div class="bd">
+  <span class="s" style="font-size:14px">Карты и черновики удаляются навсегда через 30 дней.</span>
+  <div class="list">${S.trash.map(t=>`<div class="row static">${ic(t.kind==='card'?'cards':'pen',22)}<span class="tx"><b>${t.kind==='card'?esc(t.item.name):'Черновик · '+esc(t.item.tpl)}</b><span class="s">${t.kind==='card'?'Карта':'Черновик'} · удалено ${t.when}</span></span><button class="ib" data-act="restore" data-p="${t.tid}" aria-label="Восстановить">${ic('restore',20)}</button><button class="ib del" data-act="askPurge" data-p="${t.tid}" aria-label="Удалить навсегда">${ic('trash',20)}</button></div>`).join('')}</div>
+  <button class="btn" style="margin-top:auto" data-act="askEmptyTrash">${ic('trash',20)}Очистить корзину</button>
+ </div>`}},
+ templates(){return{tab:'cards',title:'Шаблоны',html:hd('Шаблоны',{back:'Карты'})+`<div class="bd">
+  <div class="seg${S.tplTab==='add'?' r':''}" id="seg" role="tablist"><span class="ind"></span><button role="tab" aria-selected="${S.tplTab==='list'}" class="${S.tplTab==='list'?'on':''}" data-act="tplTab" data-p="list">Мои шаблоны</button><button role="tab" aria-selected="${S.tplTab==='add'}" class="${S.tplTab==='add'?'on':''}" data-act="tplTab" data-p="add">+ Добавить мой шаблон</button></div>
+  <div class="col" id="tplc">${tplContent()}</div>
+ </div>`}},
+ draft(p){const d=draftById(p.p);return{tab:'cards',title:'Черновик карты',html:hd('Черновик карты',{back:'Карты'})+`<div class="bd">
+  <div class="meta"><span style="display:flex;gap:6px;align-items:center"><span class="tag dash">Черновик</span>${d.net?'<span class="tag net">Ждёт сети</span>':''}</span><span class="s">сохранён ${d.when}</span></div>
+  ${tplBtn(d.tpl)}
+  ${d.sec?recRow('Запись 1',d.sec):''}
+  <label class="fl grow">Текст приёма, можно править<textarea class="inp" id="dtext" placeholder="Здесь будет расшифровка записи по разделам шаблона">${esc(d.text)}</textarea></label>
+  <div class="sect"><span class="lbl">Фото к карте</span><div class="thumbs">${thumbs(d.photos)}<button class="addth" data-act="addDraftPhoto" aria-label="Добавить фото">${ic('plus',26)}</button></div></div>
+  <div class="grid2"><button class="btn sm" data-act="draftContinue">${ic('mic',18)}Дозаписать</button><button class="btn sm pri" data-act="saveDraftCard">Сформировать карту</button></div>
+  <button class="lnk danger" style="align-self:center" data-act="askDelDraft" data-p="${d.id}">Удалить черновик</button>
+ </div>`}},
+ forming(){return{tab:'cards',title:'Формирую карту',html:`<div class="full"><div style="align-self:stretch;margin-bottom:24px">${stepper(2)}</div><span class="jstage" role="img" aria-label="Жак обрабатывает запись">${jako(124,'','proc')}</span><span class="big" style="margin-top:6px">Формирую карту</span><span class="s" style="font-size:15px">«Записываю, минутку…» Жак распознаёт запись и заполняет шаблон «${esc((S.formOpts||{}).tpl||S.tpl)}»</span>
+  <ol class="steps"><li><span class="ck">${ic('check',14,2.4)}</span>Распознаю речь</li><li><span class="ck">${ic('check',14,2.4)}</span>Заполняю шаблон</li><li><span class="ck">${ic('check',14,2.4)}</span>Готовлю к проверке</li></ol></div>`}},
+ review(){const r=S.review;const left=r.secs.filter(x=>x.flag).length+(r.flagName?1:0);
+  const pf=(k,l,flag)=>`<div class="fl${flag?' rflag':''}"><span class="flhead"><span class="rlab">${l}${flag?`<span class="tag warn">Проверьте</span>`:''}</span><button class="ib mic" data-act="vfix" data-p="f:${k}" aria-label="Исправить голосом: ${l}">${ic('mic',16)}</button></span><input class="inp" data-rk="${k}" aria-label="${l}" value="${esc(r[k])}" autocomplete="off"></div>`;
+  return{tab:'cards',title:'Проверка карты',html:hd('Проверка карты',{me:false})+`<div class="bd">
+  ${stepper(3)}
+  ${jline('done','Готово','«Записал. Слово в слово.» Проверьте отмеченное ниже',60)}
+  <div class="hint" id="rleft">${left?`${ic('pen',20)}<span>Проверьте выделенные места: в них система не уверена. Осталось: <b class="num">${left}</b></span>`:`${ic('check',20,2.2)}<span>Всё проверено, можно сохранять</span>`}</div>
+  <div class="meta"><span class="s">Шаблон «${esc(r.tpl)}» · ${dmy(new Date())}</span>${r.sec?`<span class="tag">Запись ${fmt(r.sec)}</span>`:''}</div>
+  <div class="sect"><span class="lbl">Пациент</span>
+   <div class="col" style="gap:10px">${pf('name','Кличка',r.flagName)}${r.flagName?cfm('okName','','Кличку распознал ИИ'):''}<div class="grid2">${pf('sp','Вид',false)}${pf('w','Вес',false)}</div>${pf('owner','Владелец',false)}</div>
+
+  </div>
+  ${r.sec?recRow('Прослушать запись',r.sec):''}
+  <span class="s" style="margin-top:-6px">Любое поле можно исправить голосом: нажмите бордовый микрофон рядом с ним.</span>
+  ${r.secs.map((s,i)=>`<div class="sect rsec${s.flag?' rflag':''}" data-i="${i}"><div class="lblrow"><span class="lbl">${esc(s.t)}${s.ai?'<span class="aitag">вывод ИИ, может быть ошибочным</span>':''}</span><span style="display:flex;align-items:center;gap:6px">${s.flag?`<span class="tag warn">Проверьте</span>`:''}<button class="ib mic" data-act="vfix" data-p="s:${i}" aria-label="Исправить голосом: ${esc(s.t)}">${ic('mic',16)}</button></span></div>
+   <textarea class="inp rta" data-ri="${i}" rows="3">${esc(s.v)}</textarea>
+   ${s.flag?cfm('okSec',i,s.why):''}</div>`).join('')}
+  <div class="sect"><span class="lbl">Фото к карте</span><div class="thumbs">${thumbs(r.photos)}<button class="addth" data-act="addReviewPhoto" aria-label="Добавить фото">${ic('plus',26)}</button></div></div>
+  <div class="col" style="gap:10px;margin-top:4px">${stepTag(4)}<button class="btn pri" data-act="saveReviewed">${ic('check',20,2.2)}Сохранить карту</button><button class="btn sm" data-act="reviewToDraft">Сохранить в черновики</button></div>
+ </div>`}},
+ calc(){return{tab:'calc',title:'Калькулятор',html:hd('Калькулятор')+`<div class="bd">
+  <div class="disp"><span class="expr" id="cexpr">${calcExpr()}</span><output id="cout" class="${S.calc.cur.length>9?'small':''}">${S.calc.cur}</output></div>
+  <div class="keys">${KEYS.map(k=>`<button class="k${kcls(k)}" data-act="key" data-p="${k}">${k}</button>`).join('')}</div>
+  <button class="btn pri dose" data-go="dosage">${ic('pill',20)}Расчёт дозировки</button>
+ </div>`}},
+ dosage(){const d=S.dose;return{tab:'calc',title:'Расчёт дозировки',html:hd('Расчёт дозировки',{back:'Калькулятор'})+`<div class="bd">
+  <div class="voice"><button class="bigbtn mid${d.listening?' live':''}" data-act="doseListen" aria-label="${d.listening?'Остановить':'Продиктовать расчёт'}">${ic('mic',34,1.6)}</button><b>${d.listening?'Слушаю…':'Продиктуйте, что рассчитать'}</b><span class="s c">Например: препарат, вид животного, вес</span></div>
+  <div class="or"><i></i>или текстом<i></i></div>
+  <label class="fl">Препарат<input class="inp" id="dz1" data-k="drug" value="${esc(d.drug)}" placeholder="Название препарата" autocomplete="off"></label>
+  <div class="grid2"><label class="fl">На кого<input class="inp" id="dz2" data-k="sp" value="${esc(d.sp)}" placeholder="Вид животного" autocomplete="off"></label><label class="fl">Вес, кг<input class="inp" id="dz3" data-k="w" inputmode="decimal" value="${esc(d.w)}" placeholder="0,0" autocomplete="off"></label></div>
+  ${d.err?`<span class="err" role="alert">${d.err}</span>`:''}
+  <button class="btn pri" data-act="doseCalc">Рассчитать</button>
+  ${d.res?`<div class="res appear"><span class="s">${esc(d.res)}</span><b>[доза по справочнику]</b></div>`:''}
+ </div>`}},
+ photo(){const off=S.cam==='denied';return{tab:'photo',title:'Фото',html:hd('Фото')+`<div class="bd">
+  <span class="s" style="font-size:15px">Откуда добавить снимок?</span>
+  <button class="camtile${off?' off':''}" data-act="camShoot"><span class="ico">${ic('camera',40,1.6)}</span><b>Камера</b><span class="s">${off?'Нет доступа к камере · нажмите, чтобы разрешить':'Сфотографировать анализ, снимок или пациента'}</span></button>
+  <button class="camtile" data-act="galleryPick"><span class="ico">${ic('image',40,1.6)}</span><b>Галерея</b><span class="s">Выбрать из фото на телефоне</span></button>
+ </div>`}},
+ pickcard(){return{tab:'photo',title:'Выбор карты',html:hd('Мои карты',{back:'Назад'})+`<div class="bd">
+  <div class="banner"><span class="th">${ic('image',18,1.5)}</span>Выберите карту пациента для фото</div>
+  ${S.cards.length?`<label class="field">${ic('search',18)}<input id="q" type="search" placeholder="Кличка, владелец или вид" aria-label="Поиск по картам" autocomplete="off"></label><div class="list">${cardRows('pick')}</div>`:`<div class="col" style="align-items:center;text-align:center;padding-top:40px"><b class="et">Пока нет карт</b><span class="s">Сначала создайте карту пациента</span><button class="btn pri auto" data-act="newCard">${ic('plus',20)}Создать новую карту</button></div>`}
+ </div>`}},
+ pickfolder(){return{tab:'photo',title:'Выбор папки',html:hd('Заметки',{back:'Назад'})+`<div class="bd">
+  <div class="banner"><span class="th">${ic('image',18,1.5)}</span>Выберите папку для фото</div>
+  <div class="list">${S.folders.map(f=>`<button class="row" data-act="savePhotoFolder" data-p="${f.id}">${ic('folder',24)}<span class="tx"><b>${esc(f.n)}</b><span class="s">${f.photos} фото</span></span><span class="end">Сюда</span></button>`).join('')}</div>
+  <button class="btn dash" data-act="newFolder" data-p="photo">${ic('plus',20)}Новая папка</button>
+ </div>`}},
+ notes(){
+  if(!S.folders.length&&!S.links.length)return{tab:'notes',title:'Заметки',html:hd('Заметки')+`<div class="bd center">${emptyArt('folder')}<b class="et">Пока нет заметок</b><span class="s">Создайте папку для заметок, фото и ссылок</span><div class="col" style="gap:10px;align-self:stretch;margin-top:6px"><button class="btn pri" data-act="newFolder">${ic('plus',20)}Создать новую папку</button><button class="btn" data-act="pickPhoto">${ic('camera',20)}Загрузить фото</button></div></div>`};
+  return{tab:'notes',title:'Заметки',html:hd('Заметки')+`<div class="bd">
+  <div class="grid3"><button class="btn" data-act="newNote">${ic('plus',16)}Заметка</button><button class="btn" data-act="newLink">${ic('link',16)}Ссылка</button><button class="btn pri" data-act="pickPhoto">${ic('plus',16)}Новое фото</button></div>
+  <div class="sect"><div class="lblrow"><span class="lbl">Папки</span><button class="lnk" data-act="newFolder">+ Новая папка</button></div>
+  <div class="list">${S.folders.map(f=>`<button class="row" data-go="folder" data-p="${f.id}">${ic('folder',24)}<span class="tx"><b>${esc(f.n)}</b><span class="s">${f.notes.length} ${plural(f.notes.length,'заметка','заметки','заметок')} · ${f.photos} фото</span></span>${ic('chev',20)}</button>`).join('')}</div></div>
+  ${S.links.length?`<div class="sect"><span class="lbl">Ссылки</span><div class="list">${S.links.map((l,i)=>`<div class="lrow"><a class="row" href="${esc(href(l.u))}" target="_blank" rel="noopener" data-act="openLink" data-p="${i}">${ic('link',22)}<span class="tx"><b>${esc(l.t)}</b><span class="s">${esc(l.u)}</span></span>${ic('ext',18)}</a><button class="ib" data-act="linkMenu" data-p="${i}" aria-label="Действия со ссылкой «${esc(l.t)}»">${ic('dots',22)}</button></div>`).join('')}</div></div>`:''}
+  <button class="row tight" data-go="ntrash" style="border-bottom:0">${ic('trash',22)}<span class="tx"><b>Корзина заметок</b><span class="s">${S.ntrash.length?S.ntrash.length+' '+plural(S.ntrash.length,'объект','объекта','объектов')+' · хранятся 30 дней':'Пусто'}</span></span>${ic('chev',20)}</button>
+ </div>`}},
+ folder(p){const f=folder(p.p)||S.folders[0];return{tab:'notes',title:f.n,html:hd(esc(f.n),{back:'Заметки'})+`<div class="bd">
+  <div class="grid2"><button class="btn sm pri" data-act="addFolderPhoto" data-p="${f.id}">${ic('camera',18)}Загрузить фото</button><button class="btn sm" data-act="newNote" data-p="${f.id}">${ic('plus',18)}Заметка</button></div>
+  <div class="sect"><span class="lbl">Фото</span>${f.photos?`<div class="tgrid">${thumbs(f.photos)}</div>`:'<span class="s">Фото пока нет</span>'}</div>
+  <div class="sect"><span class="lbl">Заметки</span>${f.notes.length?`<div class="list">${f.notes.map((n,i)=>`<button class="row" data-go="note" data-p="${f.id}:${i}">${ic('notes',22)}<span class="tx"><b>${esc(n)}</b></span>${ic('chev',20)}</button>`).join('')}</div>`:'<span class="s">Заметок пока нет</span>'}</div>
+  <button class="lnk danger" style="align-self:center;margin-top:8px" data-act="askDelFolder" data-p="${f.id}">Удалить папку</button>
+ </div>`}},
+ note(p){const R=noteRef(p.p);const ed=S.noteEdit===p.p;return{tab:'notes',title:'Заметка',html:hd('Заметка',{back:esc(R.f.n)})+`<div class="bd">
+  ${ed?`<label class="fl grow">Текст заметки<textarea class="inp" id="ntext">${esc(R.t)}</textarea></label><div class="grid2"><button class="btn sm" data-act="noteCancel">Отмена</button><button class="btn sm pri" data-act="noteSave">Сохранить</button></div>`
+  :`<div class="csec"><span class="lbl">Папка «${esc(R.f.n)}»</span><p style="white-space:pre-line;font-size:17px">${esc(R.t)}</p></div>
+  <div class="grid2"><button class="btn sm" data-act="noteEdit">${ic('pen',18)}Изменить</button><button class="btn sm" data-act="noteShare">${ic('chat',18)}Отправить</button><button class="btn sm" data-act="noteFile">${ic('upload',18)}Сохранить</button><button class="btn sm" data-act="noteAskDel" style="color:var(--rec)">${ic('trash',18)}Удалить</button></div>`}
+ </div>`}},
+ ntrash(){
+  if(!S.ntrash.length)return{tab:'notes',title:'Корзина заметок',html:hd('Корзина заметок',{back:'Заметки'})+`<div class="bd center">${emptyArt()}<b class="et">Корзина пуста</b><span class="s">Удалённые заметки, ссылки и папки хранятся здесь 30 дней</span></div>`};
+  const nm=t=>t.kind==='note'?t.text:t.kind==='link'?t.item.t:'Папка «'+t.item.n+'»';const kd={note:'Заметка',link:'Ссылка',folder:'Папка'};const ik={note:'notes',link:'link',folder:'folder'};
+  return{tab:'notes',title:'Корзина заметок',html:hd('Корзина заметок',{back:'Заметки'})+`<div class="bd">
+  <span class="s" style="font-size:14px">Всё удалённое стирается навсегда через 30 дней.</span>
+  <div class="list">${S.ntrash.map(t=>`<div class="row static">${ic(ik[t.kind],22)}<span class="tx"><b>${esc(nm(t))}</b><span class="s">${kd[t.kind]} · удалено ${t.when}</span></span><button class="ib" data-act="nRestore" data-p="${t.tid}" aria-label="Восстановить">${ic('restore',20)}</button><button class="ib del" data-act="nAskPurge" data-p="${t.tid}" aria-label="Удалить навсегда">${ic('trash',20)}</button></div>`).join('')}</div>
+  <button class="btn" style="margin-top:auto" data-act="nAskEmpty">${ic('trash',20)}Очистить корзину</button>
+ </div>`}},
+ welcome(){const first=esc(S.profile.name.split(' ')[0]);return{tab:null,title:'Привет',html:`<div class="full welcome"><span class="jstage">${jakoTurn(150)}</span><span class="big">Привет, <span class="hlw">док</span>!</span><span class="s" style="font-size:16px">Я Жак: запишу приёмы и заполню карты.</span>
+  ${S.pred?`<div class="pred appear"><small>Предсказание на смену</small>${esc(S.pred)}</div>`:''}
+  <div class="acts"><button class="btn pri" data-act="startShift">Начать смену</button><button class="btn" data-act="predict">${ic('sparkle',20)}${S.pred?'Ещё предсказание':'Предсказание на смену'}</button></div></div>`}},
+ profile(){const p=S.profile;return{tab:'none',title:'Мой профиль',html:hd('Мой профиль',{back:S.stack.length>1?'Назад':null,me:'on'})+`<div class="bd">
+  <div style="display:flex;justify-content:flex-end;margin-bottom:-6px"><button class="thm" data-act="toggleTheme" aria-label="Сменить тему: сейчас ${S.theme==='dark'?'тёмная':'светлая'}"><span class="thi">${ic(S.theme==='dark'?'sun':'moon',22)}</span><small>Сменить тему</small></button></div>
+  <div class="who"><span class="av">${esc(p.name.split(' ').map(x=>x[0]).join('').slice(0,2))}</span><span class="tx"><span class="s">Имя</span><b>${esc(p.name)}</b></span><button class="lnk" data-act="edit" data-p="name">Изменить</button></div>
+  <div class="sect"><span class="lbl">Аккаунт</span><div class="list">
+   <div class="arow"><span class="tx"><span class="s">Почта</span><b>${esc(p.email)}</b></span><button class="lnk" data-act="edit" data-p="email">Изменить</button></div>
+   <div class="arow"><span class="tx"><span class="s">Логин</span><b>${esc(p.login)}</b></span><button class="lnk" data-act="edit" data-p="login">Изменить</button></div>
+   <div class="arow"><span class="tx"><span class="s">Пароль</span><b style="letter-spacing:2px">••••••••</b></span><button class="lnk" data-act="edit" data-p="pass">Изменить</button></div>
+  </div></div>
+  <div class="sect"><span class="lbl">Учётная система</span><div class="arow"><span class="tx"><span class="s">Отправка карт</span><b>Vetmanager · ${S.vmLinked?'подключён':'не подключён'}</b></span><button class="lnk" data-act="vmToggle">${S.vmLinked?'Отключить':'Подключить'}</button></div></div>
+  <div class="sect"><span class="lbl">Подписка</span><div class="subbox"><div class="top"><b>Тариф «${esc(p.plan)}»</b><span class="tag dark">Активна</span></div><span class="s num">Действует до ${dmy(p.until)}</span>
+   <div class="col" style="gap:6px"><div class="lblrow"><span style="font-size:14px;font-weight:600">Осталось минут записи</span><b class="num">${p.minLeft} из ${p.minTotal}</b></div><div class="meter" role="meter" aria-label="Осталось минут записи" aria-valuemin="0" aria-valuemax="${p.minTotal}" aria-valuenow="${p.minLeft}"><i style="width:${Math.round(p.minLeft/Math.max(1,p.minTotal)*100)}%"></i></div></div>
+   <button class="btn pri" data-act="buyMin">${ic('plus',20)}Купить пакет минут</button><button class="btn sm ghost" data-act="renew">Продлить подписку</button></div></div>
+  <div class="sect"><span class="lbl">Подарок коллеге</span><div class="subbox"><span class="s" style="font-size:14px">Поделитесь минутами записи: они придут коллеге по телефону или почте.</span><button class="btn gift" data-act="giftMin">${ic('sparkle',20)}Подарить минуты коллеге</button></div></div>
+  <button class="suprow" data-act="predictSheet">${ic('sparkle',22)}<span class="tx">Предсказание на смену</span>${ic('chev',20)}</button>
+  <button class="suprow" data-act="support">${ic('chat',22)}<span class="tx">Связаться с поддержкой</span>${ic('chev',20)}</button>
+  <button class="btn out" data-act="logout">${ic('logout',20)}Выйти из приложения</button>
+ </div>`}},
+ login(){return{tab:null,title:'Вход',html:`<div class="full"><span class="jstage burg">${jako(104)}</span><span class="big">Вход</span><span class="s" style="font-size:15px">Войдите, чтобы открыть свои карты</span>
+  <div class="loginform" id="loginform"><label class="fl">Логин или почта<input class="inp" id="lg1" value="${esc(S.profile.login)}" autocomplete="off"></label><label class="fl">Пароль<input class="inp" id="lg2" type="password" value="password" autocomplete="off"></label><button class="btn pri" type="button" data-act="doLogin" style="margin-top:6px">Войти</button></div></div>`}},
+ offline(p){const dr=p.p==='draft';return{tab:null,title:'Нет сети',html:`<div class="full"><span class="jstage">${jako(112)}<span class="jbadge">${ic('wifioff',20,2)}</span></span><span class="big">Тут сети нет</span><span class="s" style="font-size:15px">Попробую позже сам, ничего делать не нужно.</span>
+  ${dr?`<div class="saved">${ic('check',22,2.2)}Карта сохранена в черновики</div><span class="s" style="font-size:14px">Отправлю её на обработку, когда появится связь.</span>`:''}
+  <div class="acts">${dr?`<button class="btn pri" data-act="okOffline">Хорошо</button><button class="btn" data-act="openDraft">Открыть черновики</button>`:`<button class="btn pri" data-act="okOffline">Хорошо</button>`}</div></div>`}}
+};
+
+/* ---------- render & navigation ---------- */
+function setTabbar(tab){
+ if(tab===null){tabbar.hidden=true;return}
+ tabbar.hidden=false;const order=['cards','calc','photo','notes'];const i=order.indexOf(tab);
+ tabbar.querySelectorAll('.tab').forEach(b=>{const on=b.dataset.tab===tab;b.classList.toggle('on',on);if(on)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});
+ tabind.style.opacity=i<0?'0':'1';if(i>=0)tabind.style.transform=`translateX(${i*100}%)`;
+}
+function render(anim){
+ const top=cur();
+ if(top.id==='draft'&&!draftById(top.p)){S.stack=[{id:'cards'}];return render(anim)}
+ if((top.id==='cardedit'||top.id==='secedit')&&!S.edit){S.stack=[{id:'cards'},{id:'mycards'}];return render(anim)}
+ if(top.id==='note'&&!noteRef(top.p)){S.stack=[{id:'notes'}];return render(anim)}
+ if(top.id==='card'&&!card(top.p)){S.stack=[{id:'cards'},{id:'mycards'}];return render(anim)}
+ if(top.id==='review'&&!S.review){S.stack=[{id:'cards'}];return render(anim)}
+ const def=SCR[top.id](top);
+ const old=S.L;
+ [...stage.children].forEach(c=>{if(c!==old)c.remove()});
+ const L=document.createElement('section');L.className='layer';L.setAttribute('aria-label',def.title||'');L.innerHTML=def.html;
+ if(anim==='back'&&old)stage.insertBefore(L,old);else stage.appendChild(L);
+ S.L=L;setTabbar(def.tab);updRecBar();phone.dataset.th=S.theme;
+ if(old){let a;
+  if(anim==='push'){A(L,[{transform:'translateX(100%)'},{transform:'none'}],340);a=A(old,[{transform:'none',opacity:1},{transform:'translateX(-24%)',opacity:.4}],340)}
+  else if(anim==='back'){A(L,[{transform:'translateX(-24%)',opacity:.4},{transform:'none',opacity:1}],340);a=A(old,[{transform:'none'},{transform:'translateX(100%)'}],340)}
+  else{A(L,[{opacity:0,transform:'translateY(12px)'},{opacity:1,transform:'none'}],280);a=A(old,[{opacity:1},{opacity:0}],180)}
+  a.onfinish=()=>old.remove();
+ }
+ afterRender(top.id,L);
+}
+function refresh(anim){
+ const L=S.L;if(!L)return;const top=cur();const def=SCR[top.id](top);
+ const bd=L.querySelector('.bd');const st=bd?bd.scrollTop:0;
+ L.innerHTML=def.html;const nb=L.querySelector('.bd');if(nb)nb.scrollTop=st;setTabbar(def.tab);updRecBar();
+ if(anim)L.querySelectorAll('#recz,.appear').forEach(el=>A(el,[{opacity:0,transform:'translateY(8px) scale(.98)'},{opacity:1,transform:'none'}],280));
+ afterRender(top.id,L);
+}
+function afterRender(id,L){
+ if(id==='forming')runForming(L);
+ if(S.pop){S.pop=false;const t=L.querySelectorAll('.th');const last=t[t.length-1];if(last)A(last,[{transform:'scale(.3)',opacity:0},{transform:'scale(1.08)',opacity:1,offset:.7},{transform:'none',opacity:1}],420)}
+ if(id==='mycards')setTimeout(()=>S.cards.forEach(c=>delete c.fresh),400);
+ if(S.hl)setTimeout(()=>{S.hl=null},2700);
+
+
+}
+function push(id,p){S.stack.push({id:id,p:p});render('push')}
+function back(){if(S.stack.length>1){S.stack.pop();render('back')}}
+function goTab(t){closeOverlay(true);
+ if(S.tab===t&&S.stack[0].id===t){if(S.stack.length>1){S.stack=[S.stack[0]];render('back')}return}
+ S.tab=t;S.stack=[{id:t}];render('fade')}
+function resetRec(){clearInterval(S.tm);S.rec='idle';S.sec=0;S.cardPhotos=0;updRecBar()}
+function startTimer(){clearInterval(S.tm);S.tm=setInterval(()=>{S.sec++;['#rtime','#mrtime'].forEach(q=>{const t=document.querySelector(q);if(t)t.textContent=fmt(S.sec)})},1000)}
+function updRecBar(){const b=document.getElementById('recbar');if(!b)return;const on=(S.rec==='rec'||S.rec==='pause')&&cur().id!=='newcard'&&!['offline','forming','login'].includes(cur().id);
+ if(!on){b.hidden=true;b.innerHTML='';return}
+ const was=b.hidden;b.hidden=false;
+ b.innerHTML=`<button class="go" data-act="goRec"><span class="dot${S.rec==='pause'?' off':''}"></span><span>${S.rec==='pause'?'Пауза':'Идёт запись'} · <span id="mrtime" class="num">${fmt(S.sec)}</span></span></button>${S.rec==='pause'?`<button class="rb p" data-act="resumeRec" aria-label="Продолжить запись">${ic('mic',18)}</button>`:`<button class="rb p" data-act="pauseRec" aria-label="Пауза">${ic('pause',16)}</button>`}<button class="rb s" data-act="stopRec" aria-label="Остановить запись"><span style="width:14px;height:14px;border-radius:3px;background:currentColor;display:block"></span></button>`;
+ if(was)A(b,[{opacity:0,transform:'translateY(12px)'},{opacity:1,transform:'none'}],260)}
+function setSheet(html){const sh=S.ov&&S.ov.querySelector('.sheet,.dlg');if(!sh)return;const g=sh.querySelector('.grab');sh.innerHTML=(g?'<span class="grab"></span>':'')+html}
+function cardText(c){return c.name+' · '+c.sp+' · '+c.owner+'\n'+secsFor(c).map(x=>x.t+':\n'+x.v).join('\n\n')}
+function patients(){const seen={};return S.cards.filter(c=>{const k=(c.name+'|'+c.owner).toLowerCase();if(seen[k])return false;seen[k]=1;return true})}
+function pline(c){return [c.sp,c.age,c.w].filter(Boolean).join(' · ')}
+function patientBox(){const p=S.patient;
+ if(p)return `<div class="pchosen"><span class="av">${esc(p.name[0])}</span><span class="tx"><b style="font-size:16px">${esc(p.name)}</b><span class="s">${esc(p.isNew?'Новый пациент':pline(p))}${p.isNew?'':' · '+esc(p.owner)}</span></span><button class="lnk" data-act="patClear">Сменить</button></div>`;
+ return `<div class="psearch"><label class="field">${ic('search',18)}<input id="pq" type="search" placeholder="Кличка пациента" aria-label="Поиск пациента по кличке" autocomplete="off"></label><div class="psug" id="psug" hidden></div></div>`}
+function hiStart(t,q){const i=t.toLowerCase().indexOf(q.toLowerCase());return i<0?esc(t):esc(t.slice(0,i))+'<mark>'+esc(t.slice(i,i+q.length))+'</mark>'+esc(t.slice(i+q.length))}
+function updSug(v){const box=document.getElementById('psug');if(!box)return;v=(v||'').trim();
+ if(!v){const rec=patients().slice(0,4);box.innerHTML=`<span class="s" style="padding:8px 14px 2px">Недавние пациенты</span>`+rec.map(c=>`<button data-act="patPick" data-p="${c.id}"><span class="av">${esc(c.name[0])}</span><span class="tx"><b style="font-size:15px">${esc(c.name)}</b><span class="s">${esc(pline(c))} · ${esc(c.owner)}</span></span></button>`).join('');box.hidden=false;return}
+ const lv=v.toLowerCase();const all=patients();const list=all.filter(c=>c.name.toLowerCase().startsWith(lv)).concat(all.filter(c=>!c.name.toLowerCase().startsWith(lv)&&c.name.toLowerCase().includes(lv))).slice(0,5);
+ box.innerHTML=list.map(c=>`<button data-act="patPick" data-p="${c.id}"><span class="av">${esc(c.name[0])}</span><span class="tx"><b style="font-size:15px">${hiStart(c.name,v)}</b><span class="s">${esc(pline(c))} · ${esc(c.owner)}</span></span></button>`).join('')+`<button data-act="patNew">${ic('plus',20)}<span class="tx"><b style="font-size:15px">Новый пациент «${esc(v)}»</b><span class="s">Данные заполним из записи</span></span></button>`;
+ box.hidden=false}
+function cfm(act,p,why){return `<div class="cfm"><button class="cbtn" data-act="${act}" data-p="${p}" aria-label="Подтвердить">${ic('check',26,2.6)}</button><span class="col" style="gap:2px"><small>Подтвердить</small>${why?`<span class="why">${esc(why)}</span>`:''}</span></div>`}
+function askGal(then){S.galThen=then;openOverlay(`<div class="col" style="align-items:center;gap:10px;text-align:center"><span class="ico" style="width:64px;height:64px;border-radius:50%;background:var(--acc);color:var(--on-acc);display:grid;place-items:center">${ic('image',30,1.7)}</span><h2>Разрешить доступ к галерее?</h2><span class="s" style="font-size:15px">Доступ нужен, чтобы добавлять в карты и заметки фото анализов и снимков из галереи телефона.</span></div><button class="btn pri" data-act="galAllow">Разрешить</button><button class="btn ghost" data-act="galDeny">Не разрешать</button>`,'modal')}
+function ownerText(c){const S2=Object.fromEntries(secsFor(c).map(x=>[x.t,x.v]));return {
+ what:`${c.name} осмотрен(а) ${ddmm(c.d)}. ${S2['Диагноз']?'Заключение врача: '+S2['Диагноз'].replace(/^Предварительно:\s*/i,'предварительно ').replace(/\.$/,'')+'.':''}`.trim(),
+ home:S2['Назначения']?'Что делать дома: '+S2['Назначения']+' Давайте лекарства строго по схеме, даже если питомцу стало лучше.':'Следите за аппетитом, питьём и активностью питомца.',
+ when:'Повторный осмотр: [дата и время].',
+ urgent:'Звоните врачу сразу, если: питомец перестал есть и пить, повторилась рвота, появилась вялость или кровь в стуле.'}}
+function photoSource(cb){S.photoCb=cb;openOverlay(`<div class="shead"><h2>Добавить фото к карте</h2><button class="ib" data-act="closeOv" aria-label="Закрыть">${ic('x',22)}</button></div>
+ <button class="opt xopt" data-act="srcCam">${ic('camera',22)}<span class="tx"><b>Камера</b><span class="s">${S.cam==='granted'?'Сделать снимок':S.cam==='denied'?'Нет доступа · нажмите, чтобы разрешить':'Попросим доступ к камере'}</span></span></button>
+ <button class="opt xopt" data-act="srcGal">${ic('image',22)}<span class="tx"><b>Галерея</b><span class="s">Выбрать из фото на телефоне</span></span></button>`)}
+function askCam(then){S.camThen=then||false;openOverlay(`<div class="col" style="align-items:center;gap:10px;text-align:center"><span class="ico" style="width:64px;height:64px;border-radius:50%;background:var(--acc);color:var(--on-acc);display:grid;place-items:center">${ic('camera',30,1.7)}</span><h2>Разрешить доступ к камере?</h2><span class="s" style="font-size:15px">Камера нужна, чтобы фотографировать анализы, снимки и пациентов прямо в карту.</span></div><button class="btn pri" data-act="camAllow">Разрешить</button><button class="btn ghost" data-act="camDeny">Не разрешать</button>`,'modal')}
+function openExport(id,title){const c=card(id);
+ openOverlay(`<div class="shead"><h2>${title||'Что сделать с картой?'}</h2><button class="ib" data-act="closeOv" aria-label="Закрыть">${ic('x',22)}</button></div><span class="s" style="margin-top:-6px">${esc(c.name)} · ${ddmm(c.d)} · ${esc(c.tpl||S.tpl)}</span>
+ <button class="opt xopt" data-act="copyCard" data-p="${id}">${ic('copy',22)}<span class="tx"><b>Скопировать текст</b><span class="s">Вставить в мессенджер или другую программу</span></span></button>
+ <button class="opt xopt" data-act="pdfCard" data-p="${id}">${ic('pdf',22)}<span class="tx"><b>Отправить в PDF</b><span class="s">Файл с разделами карты</span></span></button>
+ <button class="opt xopt" data-act="vmCard" data-p="${id}">${ic('vm',22)}<span class="tx"><b>Отправить карту в программу Vetmanager</b><span class="s">${c.vm?'Уже отправлена, можно отправить ещё раз':S.vmLinked?'Клиника подключена':'Нужно подключить клинику'}</span></span></button>
+ <button class="opt xopt" data-act="discharge" data-p="${id}">${ic('chat',22)}<span class="tx"><b>Сформировать выписку для владельца</b><span class="s">Понятным языком: что делать дома и когда прийти</span></span></button>
+ <button class="btn ghost" data-act="exportDone" data-p="${id}">Готово</button>`)}
+function rateHtml(id){const c=card(id),r=S.rate;return `<div class="shead"><h2>Оцените расшифровку</h2><button class="ib" data-act="closeOv" aria-label="Закрыть">${ic('x',22)}</button></div>
+ <b style="font-size:17px;line-height:1.35;margin-top:-6px">Спасибо! Благодаря вам мы становимся лучше.</b>
+ <span class="s">Карта «${esc(c.name)}» от ${ddmm(c.d)}: насколько точно Жак всё записал?</span>
+ <div class="stars" role="radiogroup" aria-label="Оценка от 1 до 5">${[1,2,3,4,5].map(n=>`<button role="radio" aria-checked="${r.n===n}" aria-label="${n} из 5" class="star${n<=r.n?' on':''}" data-act="rateStar" data-p="${n}">${ic('star',34,1.6)}</button>`).join('')}</div>
+ <span class="s c" id="ratelbl">${['Выберите от 1 до 5 звёзд','Много ошибок','Есть заметные ошибки','Нормально, но пришлось править','Хорошо, мелкие правки','Отлично, почти без правок'][r.n]}</span>
+ <label class="fl">Комментарий, если хотите<textarea class="inp" id="ratetxt" placeholder="Что Жак записал неверно или что можно улучшить?">${esc(r.t)}</textarea></label>
+ <button class="btn pri" data-act="rateSend" data-p="${id}"${r.n?'':' disabled'}>Отправить оценку</button>
+ <button class="btn ghost" data-act="closeOv">Пропустить</button>`}
+function toDrafts(data,done){
+ if(!S.drafts.length){S.drafts.unshift(Object.assign({id:Date.now(),when:nowStr()},data));done('Карта сохранена в черновики');return}
+ S.fork={data:data,done:done};
+ openOverlay(`<div class="shead"><h2>Куда сохранить?</h2><button class="ib" data-act="closeOv" aria-label="Закрыть">${ic('x',22)}</button></div>
+ <button class="opt xopt" data-act="forkNew">${ic('plus',22)}<span class="tx"><b>В новый черновик</b><span class="s">Отдельная карта</span></span></button>
+ <span class="lbl" style="margin-top:4px">Или дополнить черновик</span>
+ ${S.drafts.map(d=>`<button class="opt xopt" data-act="forkInto" data-p="${d.id}">${ic('pen',22)}<span class="tx"><b>Черновик · ${esc(d.tpl)}</b><span class="s">сохранён ${d.when}${d.sec?' · запись '+fmt(d.sec):''}</span></span></button>`).join('')}`)}
+const PREDS=['Сегодня все коты дадут себя осмотреть без единой царапины.','Владельцы будут приходить вовремя и с результатами анализов.','Самый громкий пёс дня окажется самым ласковым.','Смена закончится вовремя, а карты заполнятся сами.','Сегодня вас ждёт благодарность и, может быть, коробка конфет.','Ни один попугай не повторит за вами лишнего.','Все вены найдутся с первого раза.','Кофе не остынет, пока вы его пьёте.','Сегодня хотя бы один пациент вильнёт вам хвостом.','Рентген покажет ровно то, что вы ожидали.','Самый сложный случай дня решится быстрее, чем кажется.','Сегодня вас никто не укусит. Почти наверняка.'];
+function newPred(){let x;do{x=PREDS[Math.floor(Math.random()*PREDS.length)]}while(x===S.pred&&PREDS.length>1);S.pred=x;return x}
+const micBusy=()=>S.rec==='rec'||S.rec==='pause';
+function busyDlg(text,act,btn){openOverlay(`${jline('rec','Сейчас идёт запись карты','Микрофон занят, пока идёт запись',56)}<span class="s" style="font-size:15px">${text}</span><button class="btn pri" data-act="${act||'closeOv'}">${btn||'Понятно'}</button>`,'modal')}
+const SAID_REPL={'Жалобы':'Со слов владельца: три дня вялая, аппетит снижен, однократная рвота.','Анамнез':'Вакцинирована в марте, обработка от паразитов в сентябре.','Осмотр':'Температура 38,9 °C. Слизистые розовые. Живот мягкий, умеренно болезненный.','Диагноз':'Предварительно: острый гастрит.','Назначения':'Маропитант 1 мг/кг подкожно, 1 раз в день, 3 дня. Щадящая диета.'};
+const SAID_ADD={'Жалобы':'Аппетит снижен третий день.','Анамнез':'Последняя вакцинация весной.','Осмотр':'Повторное измерение температуры: 39,1 °C.','Диагноз':'Острый гастрит.','Назначения':'Повторный осмотр через 3 дня.'};
+const FIELD_SAID={name:'Муся',sp:'Кошка, британская',owner:'Иванова Анна',w:'4,3 кг'};
+const FIELD_LBL={name:'Кличка',sp:'Вид',owner:'Владелец',w:'Вес'};
+function vfHtml(){const v=S.vf,r=S.review;const isSec=v.kind==='s';const label=isSec?r.secs[v.key].t:FIELD_LBL[v.key];const val=isSec?r.secs[v.key].v:r[v.key];
+ return `<div class="shead"><h2>Исправить голосом</h2><button class="ib" data-act="closeOv" aria-label="Закрыть">${ic('x',22)}</button></div>
+ <span class="lbl">${esc(label)} · сейчас</span><div class="vfbox">${esc(val)}</div>
+ ${isSec?`<div class="chips">${[['replace','Заменить'],['add','Дописать']].map(([k,l])=>`<button class="chip${v.mode===k?' on':''}" data-act="vfMode" data-p="${k}">${l}</button>`).join('')}</div>`:''}
+ <div class="col" style="align-items:center;gap:10px;padding:8px 0 4px">${v.rec?`<div class="wave" aria-hidden="true">${WAVE}</div><button class="bigbtn mid stop live" data-act="vfStop" aria-label="Остановить"><i style="width:30px;height:30px"></i></button><b class="rl">Стоп</b>`:`<button class="bigbtn mid" data-act="vfStart" aria-label="Надиктовать">${ic('mic',36,1.6)}</button><b class="rl">${isSec?(v.mode==='add'?'Надиктовать дополнение':'Надиктовать заново'):'Назовите правильно'}</b>`}</div>`}
+function shareSheet(title,what){S.shareWhat=what;openOverlay(`<div class="shead"><h2>${title}</h2><button class="ib" data-act="closeOv" aria-label="Закрыть">${ic('x',22)}</button></div><div class="share">${[['Почта','notes'],['Telegram','chat'],['WhatsApp','chat'],['Скопировать','copy']].map(([n,i])=>`<button data-act="shareTo" data-p="${n}">${ic(i,22)}${n}</button>`).join('')}</div>`)}
+const href=u=>/^https?:\/\//i.test(u)?u:'https://'+String(u).replace(/^\/+/,'');
+function noteRef(p){const a=String(p).split(':');const f=folder(a[0]);return f?{f:f,i:+a[1],t:f.notes[+a[1]]}:null}
+function confirmDlg(title,text,btn,act,p){openOverlay(`<h2>${title}</h2><span class="s" style="font-size:15px">${text}</span><button class="btn danger" data-act="${act}" data-p="${p}">${btn}</button><button class="btn ghost" data-act="closeOv">Отмена</button>`,'modal')}
+
+/* ---------- overlays ---------- */
+function openOverlay(inner,kind){kind=kind||'sheet';closeOverlay(true);
+ const o=document.createElement('div');o.className='ov'+(kind==='sheet'?'':' center');
+ o.innerHTML=`<div class="scrim" data-act="closeOv"></div>`+(kind==='sheet'?`<div class="sheet" role="dialog" aria-modal="true"><span class="grab"></span>${inner}</div>`:`<div class="dlg" role="dialog" aria-modal="true">${inner}</div>`);
+ ovr.appendChild(o);S.ov=o;
+ A(o.firstChild,[{opacity:0},{opacity:1}],260);
+ A(o.lastChild,kind==='sheet'?[{transform:'translateY(100%)'},{transform:'none'}]:[{opacity:0,transform:'scale(.9)'},{opacity:1,transform:'none'}],340);
+ const f=o.querySelector('input,textarea');if(f)setTimeout(()=>{try{f.focus({preventScroll:true})}catch(e){}},360);
+}
+function closeOverlay(instant){const o=S.ov;if(!o)return;S.ov=null;S.sheetCb=null;
+ if(instant){o.remove();return}
+ A(o.firstChild,[{opacity:1},{opacity:0}],200);
+ const a=A(o.lastChild,o.querySelector('.sheet')?[{transform:'none'},{transform:'translateY(100%)'}]:[{opacity:1,transform:'none'},{opacity:0,transform:'scale(.95)'}],240);
+ a.onfinish=()=>o.remove();
+}
+function inputSheet(o){
+ const fl=o.fields.map(f=>`<label class="fl">${f.label}${f.area?`<textarea class="inp" id="is_${f.k}" placeholder="${esc(f.ph||'')}">${esc(f.v||'')}</textarea>`:`<input class="inp" id="is_${f.k}" type="${f.type||'text'}" value="${esc(f.v||'')}" placeholder="${esc(f.ph||'')}" autocomplete="off">`}</label>`).join('');
+ openOverlay(`<div class="shead"><h2>${o.title}</h2><button class="ib" data-act="closeOv" aria-label="Закрыть">${ic('x',22)}</button></div>${fl}<button class="btn pri" data-act="sheetOk">${o.ok||'Сохранить'}</button>`);
+ S.sheetCb=()=>{const v={};o.fields.forEach(f=>{const el=document.getElementById('is_'+f.k);v[f.k]=el?el.value.trim():''});closeOverlay();o.save(v)};
+}
+function toast(msg){
+ const t=document.createElement('div');t.className='toast';t.setAttribute('role','status');t.innerHTML=ic('check',18,2.4)+'<span>'+esc(msg)+'</span>';
+ const rb=document.getElementById('recbar');t.style.bottom=(tabbar.hidden?34:100)+(rb&&!rb.hidden?60:0)+'px';
+ ovr.querySelectorAll('.toast').forEach(x=>x.remove());ovr.appendChild(t);
+ A(t,[{opacity:0,transform:'translateY(16px)'},{opacity:1,transform:'none'}],280);
+ setTimeout(()=>{const a=A(t,[{opacity:1,transform:'none'},{opacity:0,transform:'translateY(10px)'}],220);a.onfinish=()=>t.remove()},2300);
+}
+function shutter(cb){const f=document.createElement('div');f.className='flash';ovr.appendChild(f);
+ const a=A(f,[{opacity:0},{opacity:.95,offset:.3},{opacity:0}],RM.matches?1:320,{fill:'none'});a.onfinish=()=>{f.remove();cb()}}
+function openTplSheet(){const cd=curDraft();const t=cd?cd.tpl:S.tpl;
+ openOverlay(`<div class="shead"><h2>Выберите шаблон</h2><button class="ib" data-act="closeOv" aria-label="Закрыть">${ic('x',22)}</button></div><div class="list">${S.templates.map(x=>`<button class="row tight" data-act="pickTpl" data-p="${esc(x.n)}"><span class="tx"><b>${esc(x.n)}</b></span>${x.n===t?ic('check',22,2.4):''}</button>`).join('')}</div><button class="btn" data-act="addTplFromSheet">${ic('plus',20)}Добавить мой шаблон</button>`)}
+function openSaveDialog(){openOverlay(`<div class="pv">${ic('image',40,1.4)}</div><h2 class="c">Сохранить фото</h2><span class="s c" style="margin-top:-6px">Куда добавить снимок?</span><button class="btn pri" data-act="toCard">${ic('cards',20)}Сохранить в карту</button><button class="btn" data-act="toNotes">${ic('notes',20)}Сохранить в заметки</button><button class="btn ghost" data-act="closeOv">Отмена</button>`,'modal')}
+
+/* ---------- forming ---------- */
+function startForming(opts){S.formOpts=opts;S.stack.push({id:'forming'});render('fade')}
+function runForming(L){const tok=++S.formTok;const li=L.querySelectorAll('.steps li');const step=RM.matches?250:750;
+ li.forEach((x,i)=>setTimeout(()=>{if(tok===S.formTok)x.classList.add('done')},step*(i+1)));
+ setTimeout(()=>{if(tok!==S.formTok)return;const o=S.formOpts||{};
+  S.review=makeReview(o);S.tab='cards';S.stack=[{id:'cards'},{id:'review'}];render('push')},step*li.length+700)}
+function makeReview(o){const pt=o.patient;return{tpl:o.tpl||S.tpl,photos:o.photos||0,sec:o.sec||0,name:pt?pt.name:'Мурка',sp:pt&&!pt.isNew?pt.sp:'Кошка',owner:pt&&!pt.isNew?pt.owner:'Иванова А.',age:pt&&pt.age||'',w:pt&&!pt.isNew&&pt.w?pt.w:'4,1 кг',flagName:!pt,
+ secs:[
+  {t:'Жалобы',v:'Со слов владельца: два дня вялая, плохо ест, была однократная рвота.',flag:false},
+  {t:'Анамнез',v:'Вакцинирована в марте. Хронических заболеваний не отмечено.',flag:false},
+  {t:'Осмотр',v:'Температура 39,4 °C. Слизистые розовые. Живот при пальпации умеренно болезненный.',flag:true,why:'Проверьте цифру температуры'},
+  {t:'Диагноз',v:'Предварительно: гастрит.',flag:true,ai:true,why:'Врач не назвал диагноз, его предложил ИИ'},
+  {t:'Назначения',v:'Маропитант 1 мг/кг п/к, 1 раз в день, 3 дня. Щадящая диета.',flag:true,why:'Проверьте препарат и дозу'}]}}
+function stepper(n){const L=['Запись','Карта','Проверка','Сохранение'];
+ return `<ol class="stepper" aria-label="Шаг ${n} из 4">${L.map((l,i)=>{const k=i+1;const st=k<n?'done':k===n?'now':'';
+  return `<li class="${st}"${k===n?' aria-current="step"':''}><span class="sn">${k<n?ic('check',13,2.6):k}</span><span class="sl">${l}</span></li>`}).join('')}</ol>`}
+function stepTag(n){return `<span class="s c">Шаг ${n} из 4</span>`}
+function updLeft(){const r=S.review,el=S.L&&S.L.querySelector('#rleft');if(!el)return;const left=r.secs.filter(x=>x.flag).length+(r.flagName?1:0);
+ el.innerHTML=left?`${ic('pen',20)}<span>Проверьте выделенные места: в них система не уверена. Осталось: <b class="num">${left}</b></span>`:`${ic('check',20,2.2)}<span>Всё проверено, можно сохранять</span>`;
+ el.classList.toggle('ok',!left)}
+function finishSave(){const r=S.review;closeOverlay(true);const id=Date.now();
+ S.cards.unshift({id:id,name:r.name.trim()||'Без клички',sp:r.sp.trim()||'—',owner:r.owner.trim()||'—',age:r.age,w:r.w,d:todayISO(),photos:r.photos,tpl:r.tpl,sec:r.sec,secs:r.secs.map(x=>({t:x.t,v:x.v})),fresh:true});
+ S.review=null;S.sort='date';S.tab='cards';S.stack=[{id:'cards'},{id:'mycards'},{id:'card',p:id}];render('fade');setTimeout(()=>openExport(id,'Карта сохранена'),350)}
+
+/* ---------- calculator ---------- */
+const toNum=s=>parseFloat(String(s).replace('−','-').replace(',','.'));
+function fmtNum(n){if(!isFinite(n))return 'Ошибка';let s=String(parseFloat(n.toPrecision(12)));if(s.includes('e'))s=n.toExponential(5);return s.replace('-','−').replace('.',',')}
+const doOp=(a,b,o)=>o==='+'?a+b:o==='−'?a-b:o==='×'?a*b:(b===0?NaN:a/b);
+function calcKey(k){
+ if(S.calc.cur==='Ошибка'&&k!=='C')S.calc={cur:'0',prev:null,op:null,fresh:false};
+ const c=S.calc;
+ if(/[0-9]/.test(k)){if(c.fresh||c.cur==='0'){c.cur=k;c.fresh=false}else if(c.cur.replace(/[−,]/g,'').length<12)c.cur+=k}
+ else if(k===','){if(c.fresh){c.cur='0,';c.fresh=false}else if(!c.cur.includes(','))c.cur+=','}
+ else if(k==='C'){S.calc={cur:'0',prev:null,op:null,fresh:false}}
+ else if(k==='±'){if(c.cur!=='0')c.cur=c.cur.startsWith('−')?c.cur.slice(1):'−'+c.cur}
+ else if(k==='%'){c.cur=fmtNum(toNum(c.cur)/100);c.fresh=true}
+ else if('÷×−+'.includes(k)){if(c.op&&!c.fresh){c.cur=fmtNum(doOp(c.prev,toNum(c.cur),c.op))}c.prev=toNum(c.cur);c.op=k;c.fresh=true}
+ else if(k==='='){if(c.op){c.cur=fmtNum(doOp(c.prev,toNum(c.cur),c.op));c.op=null;c.prev=null;c.fresh=true}}
+ const L=S.L,o=L.querySelector('#cout');if(!o)return;
+ o.textContent=S.calc.cur;o.classList.toggle('small',S.calc.cur.length>9);
+ L.querySelector('#cexpr').textContent=calcExpr();
+ L.querySelectorAll('.k.op').forEach(b=>b.classList.toggle('act',b.dataset.p===S.calc.op&&S.calc.fresh));
+}
+
+/* ---------- actions ---------- */
+function relist(){const L=S.L,box=L.querySelector('#clist');if(!box)return;box.innerHTML=cardRows('go');
+ L.querySelectorAll('#chips .chip').forEach(b=>b.classList.toggle('on',b.dataset.p===S.sort));
+ const q=L.querySelector('#q');if(q&&q.value)filter(q);
+ [...box.children].forEach((r,i)=>A(r,[{opacity:0,transform:'translateY(10px)'},{opacity:1,transform:'none'}],260,{delay:RM.matches?0:i*40}))}
+function filter(q){const v=q.value.trim().toLowerCase();S.L.querySelectorAll('[data-s]').forEach(r=>{r.hidden=!r.dataset.s.includes(v)})}
+function updTpl(anim){const L=S.L,box=L.querySelector('#tplc');if(!box)return;box.innerHTML=tplContent();
+ const seg=L.querySelector('#seg');seg.classList.toggle('r',S.tplTab==='add');seg.querySelectorAll('button').forEach(b=>{const on=b.dataset.p===S.tplTab;b.classList.toggle('on',on);b.setAttribute('aria-selected',on)});
+ if(anim)A(box,[{opacity:0,transform:`translateX(${S.tplTab==='add'?'24px':'-24px'})`},{opacity:1,transform:'none'}],280)}
+function addMonths(d,n){const x=new Date(d);x.setMonth(x.getMonth()+n);return x}
+
+const ACT={
+ closeOv(){closeOverlay()},
+ sheetOk(){if(S.sheetCb)S.sheetCb()},
+ newCard(){if(S.rec==='rec'||S.rec==='pause'){S.tab='cards';S.stack=[{id:'cards'},{id:'newcard'}];render('push');return}
+  S.patient=null;
+  resetRec();if(S.tab!=='cards'||S.stack[0].id!=='cards'){S.tab='cards';S.stack=[{id:'cards'}]}push('newcard')},
+ goRec(){S.tab='cards';S.stack=[{id:'cards'},{id:'newcard'}];render('push')},
+ pauseRec(){clearInterval(S.tm);S.rec='pause';if(cur().id==='newcard')refresh(true);else updRecBar()},
+ resumeRec(){S.rec='rec';startTimer();if(cur().id==='newcard')refresh(true);else updRecBar()},
+ openTpl(){openTplSheet()},
+ pickTpl(n){const cd=curDraft();if(cd)cd.tpl=n;else S.tpl=n;closeOverlay();refresh();const b=S.L.querySelector('.tplbtn b');if(b)A(b,[{opacity:0,transform:'translateY(6px)'},{opacity:1,transform:'none'}],260)},
+ addTplFromSheet(){closeOverlay();S.tplTab='add';push('templates')},
+ startRec(){if(S.rec==='huh')S.sec=0;S.rec='rec';startTimer();refresh(true)},
+ stopRec(){clearInterval(S.tm);S.rec=S.sec<3?'huh':'stop';if(cur().id!=='newcard'){S.tab='cards';S.stack=[{id:'cards'},{id:'newcard'}];render('push')}else refresh(true)},
+ play(_,el){const r=el.closest('.recrow');r.classList.remove('playing');void r.offsetWidth;r.classList.add('playing');setTimeout(()=>r.classList.remove('playing'),3000)},
+ addCardPhoto(){photoSource(()=>{S.cardPhotos++;S.pop=true;refresh()})},
+ srcCam(){const cb=S.photoCb;closeOverlay(true);if(S.cam!=='granted'){askCam(cb);return}shutter(cb)},
+ srcGal(){const cb=S.photoCb;if(S.gal!=='granted'){closeOverlay(true);askGal(cb);return}closeOverlay();setTimeout(()=>{cb();toast('Фото добавлено из галереи')},260)},
+ galAllow(){S.gal='granted';const then=S.galThen;closeOverlay();setTimeout(()=>{if(typeof then==='function'){then();toast('Фото добавлено из галереи')}else if(then==='save')openSaveDialog();else toast('Доступ к галерее разрешён')},260)},
+ galDeny(){S.gal='denied';closeOverlay();refresh();toast('Без доступа к галерее можно сделать снимок камерой')},
+ saveDraftNew(){toDrafts({tpl:S.tpl,sec:S.sec,photos:S.cardPhotos,text:''},msg=>{resetRec();refresh(true);toast(msg)})},
+ forkNew(){const f=S.fork;closeOverlay();S.drafts.unshift(Object.assign({id:Date.now(),when:nowStr()},f.data));f.done('Сохранено в новый черновик')},
+ forkInto(id){const f=S.fork,d=draftById(id);closeOverlay();d.sec+=f.data.sec||0;d.photos+=f.data.photos||0;d.text=[d.text,f.data.text].filter(Boolean).join('\n\n');d.when=nowStr();f.done('Добавлено к черновику «'+d.tpl+'»')},
+ askDelDraft(id){const d=draftById(id);confirmDlg('Точно удалить?',`Черновик «${esc(d.tpl)}» переместится в корзину. Его можно вернуть в течение 30 дней.`,'Удалить','delDraft',id)},
+ delDraft(id){const d=draftById(id);closeOverlay();S.drafts=S.drafts.filter(x=>x!==d);S.trash.unshift({tid:Date.now(),kind:'draft',item:d,when:nowStr()});
+  if(cur().id==='draft'){S.stack=[{id:'cards'}];render('back')}else refresh();toast('Черновик перемещён в корзину')},
+ askDelCard(id){const c=card(id);confirmDlg('Точно удалить?',`Карта «${esc(c.name)}» переместится в корзину. Её можно вернуть в течение 30 дней.`,'Удалить','delCard',id)},
+ delCard(id){const c=card(id);closeOverlay();S.cards=S.cards.filter(x=>x!==c);S.trash.unshift({tid:Date.now(),kind:'card',item:c,when:nowStr()});
+  S.stack=[{id:'cards'},{id:'mycards'}];render('back');toast('Карта перемещена в корзину')},
+ restore(tid){const t=S.trash.find(x=>x.tid==tid);S.trash=S.trash.filter(x=>x!==t);if(t.kind==='card')S.cards.push(t.item);else S.drafts.unshift(t.item);refresh();toast(t.kind==='card'?`Карта «${t.item.name}» восстановлена`:'Черновик восстановлен')},
+ askPurge(tid){confirmDlg('Удалить навсегда?','Восстановить уже не получится.','Удалить навсегда','purge',tid)},
+ purge(tid){closeOverlay();S.trash=S.trash.filter(x=>x.tid!=tid);refresh();toast('Удалено навсегда')},
+ askEmptyTrash(){confirmDlg('Очистить корзину?',`Все ${S.trash.length} ${plural(S.trash.length,'объект','объекта','объектов')} будут удалены навсегда. Восстановить их не получится.`,'Очистить','emptyTrash','')},
+ emptyTrash(){closeOverlay();S.trash=[];refresh();toast('Корзина очищена')},
+ editCard(id){const c=card(id);S.edit={id:c.id,secs:secsFor(c).map(x=>({t:x.t,v:x.v})),changed:[]};S.secMode='voice';push('cardedit',id)},
+ secMode(m){if(S.secMode===m)return;S.secMode=m;S.secRec=false;refresh()},
+ voiceMode(m){S.voiceMode=m;refresh()},
+ secRec(){if(micBusy()){busyDlg('Сейчас раздел можно исправить только текстом.','secToText','Исправить текстом');return}S.secRec=true;refresh(true)},
+ secToText(){closeOverlay();S.secMode='text';refresh()},
+ secStop(){const i=+cur().p,x=S.edit.secs[i];const said={'Жалобы':'Аппетит снижен третий день.','Анамнез':'Последняя вакцинация весной.','Осмотр':'Повторное измерение температуры: 39,1 °C.','Диагноз':'Острый гастрит.','Назначения':'Повторный осмотр через 3 дня.'}[x.t]||'Дополнение врача, надиктовано голосом.';
+  x.v=S.voiceMode==='add'?(x.v+' '+said).trim():said;S.secRec=false;S.hl='sec';refresh();toast(S.voiceMode==='add'?'Дописано в раздел':'Раздел заменён')},
+ secDone(i){i=+i;const ta=document.getElementById('setext');if(ta)S.edit.secs[i].v=ta.value;if(!S.edit.changed.includes(i))S.edit.changed.push(i);S.secRec=false;S.hl=null;back()},
+ saveEdits(){const E=S.edit,c=card(E.id);c.secs=E.secs;S.hl={id:c.id,i:E.changed.slice()};S.edit=null;S.stack=[{id:'cards'},{id:'mycards'},{id:'card',p:c.id}];render('back');setTimeout(()=>openExport(c.id,'Карта сохранена'),350)},
+ copyCard(id){const txt=cardText(card(id));try{navigator.clipboard.writeText(txt).catch(()=>{})}catch(e){}closeOverlay();toast('Текст карты скопирован')},
+ pdfCard(id){const c=card(id);const html=`<div class="shead"><h2>PDF карты</h2><button class="ib" data-act="closeOv" aria-label="Закрыть">${ic('x',22)}</button></div>
+  <div class="pdfpage"><b style="font-size:13px">[Название клиники]</b><span class="s">${esc(c.name)} · ${esc(c.sp)} · ${esc(c.owner)} · ${ddmm(c.d)}</span>${secsFor(c).map(x=>`<b style="font-size:12px;margin-top:4px">${esc(x.t)}</b><i style="width:92%"></i><i style="width:64%"></i>`).join('')}</div>
+  <span class="lbl" style="margin-top:6px">Отправить</span>
+  <div class="share">${[['Telegram','chat'],['WhatsApp','chat'],['Почта','notes'],['В файлы','pdf']].map(([n,i])=>`<button data-act="pdfSend" data-p="${n}">${ic(i,22)}${n}</button>`).join('')}</div>`;
+  if(S.ov)setSheet(html);else openOverlay(html)},
+ pdfSend(n){closeOverlay();toast(n==='В файлы'?'PDF сохранён в файлы телефона':'PDF отправлен через '+n)},
+ vmCard(id){const c=card(id);
+  if(!S.vmLinked){const h=`<div class="shead"><h2>Vetmanager</h2><button class="ib" data-act="closeOv" aria-label="Закрыть">${ic('x',22)}</button></div><span class="s" style="font-size:15px">Чтобы отправлять карты, подключите клинику. Понадобится адрес клиники в Vetmanager и ключ доступа от администратора.</span><button class="btn pri" data-act="vmLink" data-p="${id}">Подключить Vetmanager</button>`;if(S.ov)setSheet(h);else openOverlay(h);return}
+  const h=`<div class="shead"><h2>Отправить карту в программу Vetmanager</h2><button class="ib" data-act="closeOv" aria-label="Закрыть">${ic('x',22)}</button></div>
+  <div class="vmrow">${ic('vm',22)}<span class="tx"><span class="s">Клиника</span><b>[Ваша клиника] · подключена</b></span></div>
+  <div class="vmrow"><span class="av">${esc(c.name[0])}</span><span class="tx"><span class="s">Пациент найден в Vetmanager</span><b>${esc(c.name)} · ${esc(c.owner)}</b></span></div>
+  <div class="vmrow">${ic('cards',22)}<span class="tx"><span class="s">Куда</span><b>Новый приём от ${ddmm(c.d)}, ${secsFor(c).length} разделов</b></span></div>
+  <button class="btn pri" data-act="vmGo" data-p="${id}">${ic('vm',20)}${c.vm?'Отправить ещё раз':'Отправить карту'}</button>`;
+  if(S.ov)setSheet(h);else openOverlay(h)},
+ vmLink(id){S.vmLinked=true;ACT.vmCard(id);toast('Vetmanager подключён')},
+ vmGo(id){const tok=++S.formTok;setSheet(`<div class="full" style="padding:30px 10px"><span class="spin" role="img" aria-label="Отправка"></span><b style="font-size:18px">Отправляю карту в Vetmanager…</b></div>`);
+  setTimeout(()=>{if(tok!==S.formTok||!S.ov)return;const c=card(id);c.vm=true;setSheet(`<div class="full" style="padding:24px 10px">${jako(96,'','done')}<b style="font-size:20px">Карта отправлена в Vetmanager</b><span class="s" style="font-size:15px">${esc(c.name)} · приём от ${ddmm(c.d)} теперь есть в Vetmanager</span><div class="acts"><button class="btn pri" data-act="vmDone">Готово</button></div></div>`)},RM.matches?200:1600)},
+ vmDone(){closeOverlay();refresh()},
+ vmToggle(){S.vmLinked=!S.vmLinked;refresh();toast(S.vmLinked?'Vetmanager подключён':'Vetmanager отключён')},
+ doLogin(){S.tab='cards';S.stack=[{id:'welcome'}];render('fade')},
+ toggleTheme(){S.theme=S.theme==='dark'?'light':'dark';try{localStorage.setItem('vetTheme',S.theme)}catch(e){}phone.dataset.th=S.theme;refresh();toast(S.theme==='dark'?'Тёмная тема':'Светлая тема')},
+ startShift(){S.tab='cards';S.stack=[{id:'cards'}];render('fade')},
+ predict(){newPred();refresh(true)},
+ predictSheet(){newPred();openOverlay(`<div class="col" style="align-items:center;gap:12px;text-align:center"><span class="jstage">${jako(100,'bob')}</span><div class="pred" id="predbox"><small>Предсказание на смену</small>${esc(S.pred)}</div></div><button class="btn pri" data-act="predictAgain">${ic('sparkle',20)}Ещё одно</button><button class="btn ghost" data-act="closeOv">Закрыть</button>`,'modal')},
+ predictAgain(){newPred();const b=document.getElementById('predbox');if(b){b.innerHTML='<small>Предсказание на смену</small>'+esc(S.pred);A(b,[{opacity:0,transform:'scale(.96)'},{opacity:1,transform:'none'}],280)}},
+ camShoot(){if(S.cam!=='granted'){askCam(true);return}shutter(openSaveDialog)},
+ camAllow(){S.cam='granted';const then=S.camThen;closeOverlay(true);refresh();if(typeof then==='function')shutter(then);else if(then)shutter(openSaveDialog);else toast('Доступ к камере разрешён')},
+ camDeny(){const fromCard=typeof S.camThen==='function';S.cam='denied';closeOverlay();refresh();if(fromCard)toast('Без камеры можно выбрать фото из галереи')},
+ galleryPick(){if(S.gal!=='granted'){askGal('save');return}openSaveDialog()},
+ vfix(p){if(micBusy()){busyDlg('Сейчас исправьте поле текстом: нажмите на него и введите правильное значение.');return}
+  const a=p.split(':');S.vf={kind:a[0],key:a[0]==='s'?+a[1]:a[1],mode:'replace',rec:false};openOverlay(vfHtml())},
+ vfMode(m){S.vf.mode=m;setSheet(vfHtml())},
+ vfStart(){S.vf.rec=true;setSheet(vfHtml())},
+ vfStop(){const v=S.vf,r=S.review;closeOverlay();let sel;
+  if(v.kind==='s'){const x=r.secs[v.key];x.v=v.mode==='add'?(x.v+' '+(SAID_ADD[x.t]||'Дополнение врача.')).trim():(SAID_REPL[x.t]||'Текст раздела надиктован заново.');x.flag=false;if(v.mode==='replace')x.ai=false;sel=`.rsec[data-i="${v.key}"] textarea`}
+  else{r[v.key]=FIELD_SAID[v.key];if(v.key==='name')r.flagName=false;sel=`[data-rk="${v.key}"]`}
+  S.vf=null;refresh();updLeft();const el=S.L.querySelector(sel);if(el)A(el,[{background:'var(--ok)'},{background:'var(--surf)'}],1400);toast('Исправлено голосом')},
+ doseManual(){closeOverlay();setTimeout(()=>{const f=document.getElementById('dz1');if(f)f.focus()},260)},
+ buyMin(){const opt=(n)=>`<button class="opt${S.buyN===n?' on':''}" data-act="buyPick" data-p="${n}"><span>${n} минут</span><span style="display:flex;align-items:center;gap:12px"><span class="s">[цена]</span><span class="rad"></span></span></button>`;
+  openOverlay(`<div class="shead"><h2>Купить пакет минут</h2><button class="ib" data-act="closeOv" aria-label="Закрыть">${ic('x',22)}</button></div><span class="s" style="margin-top:-6px">Минуты добавятся к остатку и не сгорят до конца подписки.</span>${opt(100)}${opt(300)}${opt(1000)}<button class="btn pri" data-act="buyDo">Купить</button>`)},
+ buyPick(n){S.buyN=+n;S.ov.querySelectorAll('.opt').forEach(b=>b.classList.toggle('on',+b.dataset.p===S.buyN))},
+ buyDo(){const p=S.profile;p.minLeft+=S.buyN;p.minTotal+=S.buyN;closeOverlay();refresh();toast(`Добавлено ${S.buyN} минут`)},
+ giftMin(){openOverlay(`<div class="shead"><h2>Подарить минуты коллеге</h2><button class="ib" data-act="closeOv" aria-label="Закрыть">${ic('x',22)}</button></div><label class="fl">Телефон или почта коллеги<input class="inp" id="gcontact" autocomplete="off" placeholder="+7 … или имя@почта.ру"></label><span class="fl">Сколько минут</span><div class="chips" id="gchips">${[30,60,120].map(n=>`<button class="chip${S.giftN===n?' on':''}" data-act="giftPick" data-p="${n}">${n} минут</button>`).join('')}</div><span class="s">У вас осталось ${S.profile.minLeft} минут</span><span class="err" id="gerr" role="alert"></span><button class="btn pri" data-act="giftDo">Подарить</button>`)},
+ giftPick(n){S.giftN=+n;S.ov.querySelectorAll('#gchips .chip').forEach(b=>b.classList.toggle('on',+b.dataset.p===S.giftN))},
+ giftDo(){const c=(document.getElementById('gcontact')||{}).value||'';const e=document.getElementById('gerr');
+  if(!c.trim()){e.textContent='Укажите телефон или почту коллеги';return}
+  if(S.giftN>S.profile.minLeft){e.textContent='Не хватает минут: купите пакет или выберите меньше';return}
+  S.profile.minLeft-=S.giftN;closeOverlay();refresh();toast(`Коллеге отправлено ${S.giftN} минут`)},
+ noteEdit(){S.noteEdit=cur().p;refresh()},
+ noteCancel(){S.noteEdit=null;refresh()},
+ noteSave(){const R=noteRef(cur().p);const v=(document.getElementById('ntext')||{}).value;if(v!=null&&v.trim())R.f.notes[R.i]=v.trim();S.noteEdit=null;refresh();toast('Заметка сохранена')},
+ noteShare(){shareSheet('Отправить заметку','Заметка')},
+ noteFile(){toast('Заметка сохранена в файлы телефона')},
+ noteAskDel(){confirmDlg('Точно удалить?','Заметка переместится в корзину заметок. Её можно вернуть в течение 30 дней.','Удалить','noteDel',cur().p)},
+ noteDel(p){const R=noteRef(p);closeOverlay();R.f.notes.splice(R.i,1);S.ntrash.unshift({tid:Date.now(),kind:'note',fid:R.f.id,text:R.t,when:nowStr()});S.stack=[{id:'notes'},{id:'folder',p:R.f.id}];render('back');toast('Заметка перемещена в корзину')},
+ shareTo(n){closeOverlay();const w=S.shareWhat||'Заметка';toast(n==='Скопировать'?'Скопировано':n==='Почта'?w+' отправлена на почту':w+' отправлена в '+n)},
+ linkMenu(i){const l=S.links[+i];S.linkI=+i;openOverlay(`<div class="shead"><h2>${esc(l.t)}</h2><button class="ib" data-act="closeOv" aria-label="Закрыть">${ic('x',22)}</button></div><span class="s" style="margin-top:-6px">${esc(l.u)}</span><a class="opt xopt" href="${esc(href(l.u))}" target="_blank" rel="noopener" data-act="openLink" data-p="${+i}">${ic('ext',22)}<span class="tx"><b>Открыть</b><span class="s">В браузере телефона</span></span></a><button class="opt xopt" data-act="linkShare">${ic('chat',22)}<span class="tx"><b>Отправить</b><span class="s">Почта, Telegram, WhatsApp</span></span></button><button class="opt xopt" data-act="linkEdit">${ic('pen',22)}<span class="tx"><b>Изменить</b><span class="s">Название и адрес</span></span></button><button class="opt xopt" data-act="linkAskDel" style="color:var(--rec)">${ic('trash',22)}<span class="tx"><b>Удалить</b><span class="s">Ссылка уйдёт в корзину заметок</span></span></button>`)},
+ openLink(){closeOverlay();toast('Ссылка открыта в браузере')},
+ linkShare(){closeOverlay(true);shareSheet('Отправить ссылку','Ссылка')},
+ linkEdit(){const l=S.links[S.linkI];closeOverlay(true);inputSheet({title:'Изменить ссылку',fields:[{k:'t',label:'Название',v:l.t},{k:'u',label:'Адрес',v:l.u,type:'url'}],ok:'Сохранить',save:v=>{l.t=v.t||l.t;l.u=v.u||l.u;refresh();toast('Ссылка сохранена')}})},
+ linkAskDel(){const l=S.links[S.linkI];confirmDlg('Точно удалить?',`Ссылка «${esc(l.t)}» переместится в корзину заметок.`,'Удалить','linkDel',S.linkI)},
+ linkDel(i){const l=S.links[+i];closeOverlay();S.links.splice(+i,1);S.ntrash.unshift({tid:Date.now(),kind:'link',item:l,when:nowStr()});refresh();toast('Ссылка перемещена в корзину')},
+ askDelFolder(fid){const f=folder(fid);confirmDlg('Точно удалить?',`Папка «${esc(f.n)}» со всеми заметками и фото переместится в корзину заметок.`,'Удалить','delFolder',fid)},
+ delFolder(fid){const f=folder(fid);closeOverlay();S.folders=S.folders.filter(x=>x!==f);S.ntrash.unshift({tid:Date.now(),kind:'folder',item:f,when:nowStr()});S.stack=[{id:'notes'}];render('back');toast('Папка перемещена в корзину')},
+ nRestore(tid){const t=S.ntrash.find(x=>x.tid==tid);S.ntrash=S.ntrash.filter(x=>x!==t);
+  if(t.kind==='note'){let f=folder(t.fid);if(!f){f={id:Date.now(),n:'Восстановленные',photos:0,notes:[]};S.folders.push(f)}f.notes.push(t.text)}else if(t.kind==='link')S.links.push(t.item);else S.folders.push(t.item);
+  refresh();toast('Восстановлено')},
+ nAskPurge(tid){confirmDlg('Удалить навсегда?','Восстановить уже не получится.','Удалить навсегда','nPurge',tid)},
+ nPurge(tid){closeOverlay();S.ntrash=S.ntrash.filter(x=>x.tid!=tid);refresh();toast('Удалено навсегда')},
+ nAskEmpty(){confirmDlg('Очистить корзину?',`Все ${S.ntrash.length} ${plural(S.ntrash.length,'объект','объекта','объектов')} будут удалены навсегда.`,'Очистить','nEmpty','')},
+ nEmpty(){closeOverlay();S.ntrash=[];refresh();toast('Корзина заметок очищена')},
+ okOffline(){S.stack=S.offRet&&S.offRet.length?S.offRet:[{id:'cards'}];S.offRet=null;S.tab=['cards','calc','photo','notes'].includes(S.stack[0].id)?S.stack[0].id:'cards';render('fade')},
+ patPick(id){const c=card(id);S.patient={name:c.name,sp:c.sp,age:c.age,w:c.w,owner:c.owner};refresh();toast('Пациент выбран: '+c.name)},
+ patNew(){const v=(document.getElementById('pq')||{}).value||'';S.patient={name:v.trim().replace(/^./,m=>m.toUpperCase()),isNew:true};refresh()},
+ patClear(){S.patient=null;refresh();setTimeout(()=>{const q=document.getElementById('pq');if(q)q.focus()},50)},
+ exportDone(id){const c=card(id);if(!c||c.rating){closeOverlay();return}S.rate={n:0,t:''};setSheet(rateHtml(id))},
+ rateStar(n){const t=document.getElementById('ratetxt');S.rate.t=t?t.value:S.rate.t;S.rate.n=+n;const id=(S.ov.querySelector('[data-act="rateSend"]')||{}).dataset.p;setSheet(rateHtml(id))},
+ rateSend(id){const c=card(id);const t=document.getElementById('ratetxt');c.rating={n:S.rate.n,t:t?t.value.trim():''};closeOverlay();toast('Оценка отправлена. Спасибо!')},
+ discharge(id){closeOverlay(true);S.dis=null;push('discharge',id)},
+ disSend(){shareSheet('Отправить выписку владельцу','Выписка')},
+ disCopy(){const d=S.dis;try{navigator.clipboard.writeText([d.what,d.home,d.when,d.urgent].join('\n\n')).catch(()=>{})}catch(e){}toast('Выписка скопирована')},
+ disPdf(){toast('PDF выписки готов к отправке');shareSheet('Отправить PDF выписки','Выписка')},
+ saveCard(){const o={photos:S.cardPhotos,tpl:S.tpl,sec:S.sec,patient:S.patient};S.patient=null;S.profile.minLeft=Math.max(0,S.profile.minLeft-Math.ceil(S.sec/60));resetRec();startForming(o)},
+ okSec(i){const r=S.review;r.secs[+i].flag=false;r.secs[+i].ai=false;const box=S.L.querySelector(`.rsec[data-i="${i}"]`);if(box){const cf=box.querySelector('.cfm');if(cf)cf.remove()}
+  if(box){box.classList.remove('rflag');const t=box.querySelector('.tag.warn');const n=box.querySelector('.rnote');
+   [t,n].forEach(el=>{if(el){const a=A(el,[{opacity:1},{opacity:0}],200);a.onfinish=()=>el.remove()}});A(box,[{background:'var(--ok)'},{background:'transparent'}],900)}
+  updLeft()},
+ okName(){S.review.flagName=false;refresh();updLeft()},
+ addReviewPhoto(){photoSource(()=>{S.review.photos++;S.pop=true;refresh()})},
+ saveReviewed(){const r=S.review;const left=r.secs.filter(x=>x.flag).length+(r.flagName?1:0);
+  if(left){openOverlay(`<h2>Сохранить без проверки?</h2><span class="s" style="font-size:15px">Осталось непроверенных мест: ${left}. В них система могла ошибиться.</span><button class="btn pri" data-act="closeOv">Вернуться к проверке</button><button class="btn" data-act="forceSave">Всё равно сохранить</button>`,'modal');return}
+  finishSave()},
+ forceSave(){finishSave()},
+ reviewToDraft(){const r=S.review;toDrafts({tpl:r.tpl,sec:r.sec,photos:r.photos,text:r.secs.map(s=>s.t+': '+s.v).join('\n\n')},msg=>{S.review=null;S.tab='cards';S.stack=[{id:'cards'}];render('fade');toast(msg)})},
+ sort(k){S.sort=k;relist()},
+ tplTab(p){if(S.tplTab===p)return;S.tplTab=p;updTpl(true)},
+ useTpl(n){S.tpl=n;updTpl(false);toast(`Шаблон «${n}» выбран`)},
+ addSec(){inputSheet({title:'Новый раздел',fields:[{k:'n',label:'Название раздела',ph:'Например, «Назначения»'}],ok:'Добавить',save:v=>{S.newSections.push(v.n||'Раздел '+(S.newSections.length+1));updTpl(false)}})},
+ delSec(i){S.newSections.splice(+i,1);updTpl(false)},
+ saveTpl(){const n=(S.tplName||'').trim()||'Мой шаблон';S.templates.push({n:n,own:true});S.tpl=n;S.tplName='';S.tplDoc=null;S.newSections=['Жалобы','Осмотр'];S.tplTab='list';updTpl(true);toast(`Шаблон «${n}» сохранён`)},
+ key(k){calcKey(k)},
+ doseListen(){const d=S.dose;if(!d.listening&&micBusy()){busyDlg('Дозу сейчас можно ввести только вручную: препарат, вид животного и вес.','doseManual','Ввести вручную');return}d.listening=!d.listening;refresh();
+  if(d.listening){const tok=++S.formTok;setTimeout(()=>{if(tok!==S.formTok||!d.listening||cur().id!=='dosage')return;d.listening=false;d.drug='Мелоксикам';d.sp='Собака';d.w='12,5';d.err=null;refresh();
+   S.L.querySelectorAll('.inp').forEach((el,i)=>A(el,[{background:'var(--fill-2)'},{background:'var(--ph-bg)'}],900,{delay:i*120}));toast('Поля заполнены по голосу')},2600)}},
+ doseCalc(){const d=S.dose;if(!d.drug.trim()||!d.w.trim()){d.err='Укажите препарат и вес животного';d.res=null;refresh();return}
+  d.err=null;d.res=`${d.drug.trim()} · ${d.sp.trim()||'вид не указан'} · ${d.w.trim()} кг`;refresh(true)},
+ pickPhoto(){shutter(openSaveDialog)},
+ toCard(){closeOverlay();push('pickcard')},
+ toNotes(){closeOverlay();push('pickfolder')},
+ savePhotoCard(id){const c=card(id);c.photos++;S.pop=true;S.tab='cards';S.stack=[{id:'cards'},{id:'mycards'},{id:'card',p:c.id}];render('push');toast(`Фото сохранено в карту «${c.name}»`)},
+ savePhotoFolder(id){const f=folder(id);f.photos++;S.pop=true;S.tab='notes';S.stack=[{id:'notes'},{id:'folder',p:f.id}];render('push');toast(`Фото сохранено в «${f.n}»`)},
+ addPhotoToCard(id){photoSource(()=>{card(id).photos++;S.pop=true;refresh()})},
+ addFolderPhoto(id){shutter(()=>{folder(id).photos++;S.pop=true;refresh();toast('Фото загружено')})},
+ addDraftPhoto(){const d=curDraft();photoSource(()=>{d.photos++;S.pop=true;refresh()})},
+ newFolder(p){inputSheet({title:'Новая папка',fields:[{k:'n',label:'Название папки',ph:'Например, «Анализы»'}],ok:'Создать',save:v=>{
+  const f={id:Date.now(),n:v.n||'Новая папка',photos:p==='photo'?1:0,notes:[]};S.folders.push(f);if(p==='photo')S.pop=true;
+  S.tab='notes';S.stack=[{id:'notes'},{id:'folder',p:f.id}];render('push');toast(p==='photo'?'Папка создана, фото сохранено':'Папка создана')}})},
+ newNote(fid){inputSheet({title:'Новая заметка',fields:[{k:'t',label:'Текст заметки',area:true,ph:'Что записать?'}],ok:'Сохранить',save:v=>{
+  let f=fid?folder(fid):S.folders[0];if(!f){f={id:Date.now(),n:'Общие',photos:0,notes:[]};S.folders.push(f)}
+  f.notes.unshift(v.t||'Новая заметка');refresh();toast(`Заметка добавлена в «${f.n}»`)}})},
+ newLink(){inputSheet({title:'Новая ссылка',fields:[{k:'t',label:'Название',ph:'Например, «Справочник»'},{k:'u',label:'Адрес',ph:'example.ru',type:'url'}],ok:'Сохранить',save:v=>{
+  S.links.push({t:v.t||'Ссылка',u:v.u||'адрес не указан'});refresh();toast('Ссылка сохранена')}})},
+ edit(k){const p=S.profile;
+  if(k==='pass')return inputSheet({title:'Сменить пароль',fields:[{k:'a',label:'Текущий пароль',type:'password'},{k:'b',label:'Новый пароль',type:'password'}],ok:'Сменить',save:()=>toast('Пароль изменён')});
+  const L={name:'Имя',email:'Почта',login:'Логин'}[k];
+  inputSheet({title:'Изменить: '+L.toLowerCase(),fields:[{k:'v',label:L,v:p[k],type:k==='email'?'email':'text'}],ok:'Сохранить',save:v=>{if(v.v)p[k]=v.v;refresh();toast('Сохранено')}})},
+ renew(){const opt=(n,l)=>`<button class="opt${S.renewN===n?' on':''}" data-act="renewPick" data-p="${n}"><span>${l}</span><span style="display:flex;align-items:center;gap:12px"><span class="s">[цена]</span><span class="rad"></span></span></button>`;
+  openOverlay(`<div class="shead"><h2>Продлить подписку</h2><button class="ib" data-act="closeOv" aria-label="Закрыть">${ic('x',22)}</button></div>${opt(1,'1 месяц')}${opt(12,'12 месяцев')}<button class="btn pri" data-act="renewDo">Продлить</button>`)},
+ renewPick(n){S.renewN=+n;S.ov.querySelectorAll('.opt').forEach(b=>b.classList.toggle('on',+b.dataset.p===S.renewN))},
+ renewDo(){S.profile.until=addMonths(S.profile.until,S.renewN);closeOverlay();refresh();toast('Подписка продлена до '+dmy(S.profile.until))},
+ support(){inputSheet({title:'Связаться с поддержкой',fields:[{k:'m',label:'Опишите вопрос',area:true,ph:'Что случилось?'}],ok:'Отправить',save:()=>toast('Сообщение отправлено в поддержку')})},
+ logout(){openOverlay(`<h2>Выйти из приложения?</h2><span class="s" style="font-size:15px">Карты и заметки останутся в аккаунте.</span><button class="btn pri" data-act="doLogout">Выйти</button><button class="btn ghost" data-act="closeOv">Отмена</button>`,'modal')},
+ doLogout(){closeOverlay();resetRec();S.stack=[{id:'login'}];render('fade')},
+ draftContinue(){const d=curDraft();S.tpl=d.tpl;clearInterval(S.tm);S.rec=d.sec?'stop':'idle';S.sec=d.sec;S.cardPhotos=d.photos;S.drafts=S.drafts.filter(x=>x!==d);S.tab='cards';S.stack=[{id:'cards'},{id:'newcard'}];render('push');toast('Черновик открыт для дозаписи')},
+ saveDraftCard(){const d=curDraft();S.drafts=S.drafts.filter(x=>x!==d);startForming({photos:d.photos,tpl:d.tpl,sec:d.sec})},
+ openDraft(){S.offRet=null;S.tab='cards';S.stack=[{id:'cards'}];render('fade')}
+};
+
+/* ---------- events ---------- */
+phone.addEventListener('click',e=>{
+ const t=e.target.closest('[data-act],[data-go],[data-back],[data-tab]');if(!t||!phone.contains(t))return;
+ if(t.dataset.tab){goTab(t.dataset.tab);return}
+ if(t.hasAttribute('data-back')){back();return}
+ if(t.dataset.go){push(t.dataset.go,t.dataset.p);return}
+ const f=ACT[t.dataset.act];if(f)f(t.dataset.p,t);
+});
+phone.addEventListener('input',e=>{const t=e.target;
+ if(t.id==='q')filter(t);
+ else if(t.id==='pq')updSug(t.value);
+ else if(t.dataset.dk&&S.dis)S.dis[t.dataset.dk]=t.value;
+ else if(t.id==='dtext'&&curDraft())curDraft().text=t.value;
+ else if(t.id==='setext'&&S.edit)S.edit.secs[+t.dataset.se].v=t.value;
+ else if(t.id==='tplName')S.tplName=t.value;
+ else if(t.dataset.rk&&S.review)S.review[t.dataset.rk]=t.value;
+ else if(t.dataset.ri&&S.review)S.review.secs[+t.dataset.ri].v=t.value;
+ else if(t.dataset.k&&S.dose.hasOwnProperty(t.dataset.k))S.dose[t.dataset.k]=t.value;
+});
+['keyup','compositionend','focusin','search'].forEach(ev=>phone.addEventListener(ev,e=>{if(e.target&&e.target.id==='pq')updSug(e.target.value)}));
+phone.addEventListener('change',e=>{const t=e.target;if(t.id!=='tplFile'||!t.files||!t.files[0])return;
+ const name=t.files[0].name;S.tplDoc=name;S.tplParsing=true;updTpl(false);
+ setTimeout(()=>{S.tplParsing=false;S.tplName=name.replace(/\.[^.]+$/,'');S.newSections=['Анамнез','Осмотр','Диагноз','Назначения'];
+  if(cur().id!=='templates'||S.tplTab!=='add')return;updTpl(false);
+  S.L.querySelectorAll('.secrow').forEach((r,i)=>A(r,[{opacity:0,transform:'translateY(8px)'},{opacity:1,transform:'none'}],260,{delay:RM.matches?0:i*70}));
+  toast('Разделы взяты из документа')},RM.matches?200:1500)});
+phone.addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.target.id==='lg1'||e.target.id==='lg2')){e.preventDefault();ACT.doLogin();return}if(e.key==='Enter'&&e.target.tagName==='INPUT'&&e.target.id.startsWith('is_')&&S.sheetCb){e.preventDefault();S.sheetCb()}
+ if(e.key==='Escape'&&S.ov)closeOverlay()});
+
+function sc(name){closeOverlay(true);
+ if(name==='restart'){clearInterval(S.tm);S.formTok++;const th=S.theme;S=init();S.theme=th;S.L=stage.lastElementChild;syncEmpty();render('fade');updRecBar();return}
+ if(name==='empty'){
+  if(!S.emptyMode){S.bk={cards:S.cards,folders:S.folders,links:S.links,drafts:S.drafts};S.cards=[];S.folders=[];S.links=[];S.drafts=[];S.emptyMode=true}
+  else{const b=S.bk||{};S.cards=(b.cards||[]).concat(S.cards);S.folders=(b.folders||[]).concat(S.folders);S.links=(b.links||[]).concat(S.links);S.drafts=(b.drafts||[]).concat(S.drafts);S.emptyMode=false}
+  syncEmpty();S.formTok++;S.stack=[S.stack[0].id==='login'||S.stack[0].id==='offline'?{id:'cards'}:S.stack[0]];
+  if(!['cards','calc','photo','notes'].includes(S.stack[0].id))S.stack=[{id:'cards'}];S.tab=S.stack[0].id;render('fade');return}
+ if(name==='bgrec'){S.formTok++;resetRec();S.sec=37;S.rec='rec';startTimer();S.tab='calc';S.stack=[{id:'calc'}];render('fade');return}
+ if(name==='huh'){S.formTok++;resetRec();S.rec='huh';S.tab='cards';S.stack=[{id:'cards'},{id:'newcard'}];render('fade');return}
+ if(name==='offline'){if(cur().id!=='offline'){S.offRet=S.stack.slice()}S.formTok++;S.stack=[{id:'offline'}];render('fade');return}
+ if(name==='offlineCard'){S.formTok++;const sec=S.rec!=='idle'&&S.sec?S.sec:47;
+  S.drafts.unshift({id:Date.now(),tpl:S.tpl,sec:sec,photos:S.cardPhotos,text:'',when:nowStr(),net:true});resetRec();S.offRet=[{id:'cards'}];S.stack=[{id:'offline',p:'draft'}];render('fade')}
+}
+function syncEmpty(){const b=document.getElementById('scEmpty');b.setAttribute('aria-pressed',S.emptyMode?'true':'false')}
+function jump(id){closeOverlay(true);S.formTok++;
+ const map={cards:['cards'],newcard:['cards','newcard'],mycards:['cards','mycards'],templates:['cards','templates'],draft:['cards','draft'],card:['cards','mycards','card'],trash:['cards','trash'],welcome:['welcome'],calc:['calc'],dosage:['calc','dosage'],photo:['photo'],notes:['notes'],profile:['cards','profile']};
+ if(id==='newcard'&&S.rec!=='rec'&&S.rec!=='pause')resetRec();
+ if(id==='draft'&&!S.drafts.length)S.drafts.unshift({id:Date.now(),tpl:S.tpl,sec:52,photos:1,text:'',when:nowStr()});
+ if(id==='card'&&!S.cards.length){sc('empty')}
+ S.stack=map[id].map(x=>({id:x}));S.tab=map[id][0]==='welcome'?'cards':map[id][0];
+ if(id==='draft')S.stack[1].p=S.drafts[0].id;
+ if(id==='card')S.stack[2].p=S.cards[0].id;
+ render('fade')}
+document.querySelectorAll('[data-sc]').forEach(b=>b.addEventListener('click',()=>sc(b.dataset.sc)));
+document.querySelectorAll('[data-j]').forEach(b=>b.addEventListener('click',()=>jump(b.dataset.j)));
+
+function fit(){const w=document.documentElement.clientWidth-32;const h=window.innerHeight-48;
+ const s=Math.min(1,w/412,Math.max(h,620)/866);document.documentElement.style.setProperty('--s',s.toFixed(3))}
+window.addEventListener('resize',fit);fit();
+render('none');
+})();
+</script>
+
+</body>
+</html>
